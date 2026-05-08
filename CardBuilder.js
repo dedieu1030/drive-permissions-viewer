@@ -27,8 +27,9 @@ function createHomepageCard() {
     .setText("Révocation en masse des accès. Séparez plusieurs emails par des virgules."));
     
   var emailInput = CardService.newTextInput()
+    .setMultiline(true)
     .setFieldName("offboardEmail")
-    .setTitle("Emails (ex: a@test.com, b@test.com)");
+    .setTitle("Collez les emails ici (1 par ligne, ou depuis Excel)");
     
   var searchAction = CardService.newAction()
     .setFunctionName("handleSearchUserAccess");

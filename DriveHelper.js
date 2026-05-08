@@ -135,7 +135,12 @@ function revokePermission(fileId, permId) {
  * Recherche tous les fichiers/dossiers auxquels un ou plusieurs utilisateurs ont un accès direct
  */
 function searchUserAccess(emailInput) {
-  var emails = emailInput.split(',').map(function(e) { return e.trim(); }).filter(function(e) { return e.length > 0; });
+  // Découpe par virgule, point-virgule, saut de ligne ou espace
+  var emails = emailInput.split(/[\n,;\s]+/).map(function(e) { return e.trim().toLowerCase(); }).filter(function(e) { return e.length > 0 && e.indexOf('@') !== -1; });
+  
+  // Suppression des doublons
+  emails = emails.filter(function(item, pos) { return emails.indexOf(item) == pos; });
+  
   if (emails.length === 0) return [];
   
   var queryParts = emails.map(function(email) {
@@ -173,7 +178,9 @@ function searchUserAccess(emailInput) {
  * Révoque l'accès de plusieurs utilisateurs sur une liste de fichiers
  */
 function massRevokeUser(emailInput) {
-  var emails = emailInput.split(',').map(function(e) { return e.trim().toLowerCase(); }).filter(function(e) { return e.length > 0; });
+  var emails = emailInput.split(/[\n,;\s]+/).map(function(e) { return e.trim().toLowerCase(); }).filter(function(e) { return e.length > 0 && e.indexOf('@') !== -1; });
+  emails = emails.filter(function(item, pos) { return emails.indexOf(item) == pos; });
+  
   var files = searchUserAccess(emailInput);
   var revokedCount = 0;
   
