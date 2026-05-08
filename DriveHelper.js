@@ -130,3 +130,64 @@ function revokePermission(fileId, permId) {
     return false;
   }
 }
+
+/**
+ * Recherche tous les fichiers/dossiers auxquels un utilisateur a un accès direct
+ */
+function searchUserAccess(email) {
+  var query = "'" + email + "' in readers or '" + email + "' in writers";
+  var files = [];
+  var pageToken = null;
+  
+  try {
+    do {
+      var response = Drive.Files.list({
+        q: query,
+        fields: "nextPageToken, files(id, name)",
+        supportsAllDrives: true,
+        pageSize: 100,
+        pageToken: pageToken
+      });
+      
+      if (response.files) {
+        files = files.concat(response.files);
+      }
+      pageToken = response.nextPageToken;
+    } while (pageToken && files.length < 100); // Limite à 100 pour l'instant pour éviter les timeouts
+    
+    return files;
+  } catch(e) {
+    console.error("Erreur searchUserAccess:", e);
+    return [];
+  }
+}
+
+/**
+ * Révoque l'accès d'un utilisateur sur une liste de fichiers
+ */
+function massRevokeUser(email) {
+  var files = searchUserAccess(email);
+  var revokedCount = 0;
+  
+  files.forEach(function(file) {
+    try {
+      // On liste les permissions pour trouver l'ID exact lié à cet email
+      var permsResponse = Drive.Permissions.list(file.id, {fields: "permissions(id, emailAddress)", supportsAllDrives: true});
+      if (permsResponse && permsResponse.permissions) {
+        permsResponse.permissions.forEach(function(p) {
+          if (p.emailAddress && p.emailAddress.toLowerCase() === email.toLowerCase()) {
+            Drive.Permissions.remove(file.id, p.id, {supportsAllDrives: true});
+            revokedCount++;
+          }
+        });
+      }
+    } catch(e) {
+      console.log("Erreur de révocation sur fichier " + file.id, e);
+    }
+  });
+  
+  return {
+    totalFiles: files.length,
+    revokedCount: revokedCount
+  };
+}

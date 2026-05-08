@@ -17,8 +17,32 @@ function createHomepageCard() {
     .setImageUrl(ICONS.SHIELD)
     .setImageStyle(CardService.ImageStyle.CIRCLE));
   
-  card.addSection(CardService.newCardSection()
-    .addWidget(CardService.newTextParagraph().setText("<b>Audit de sécurité</b><br>Sélectionnez un document pour analyser ses risques.")));
+  var infoSection = CardService.newCardSection()
+    .addWidget(CardService.newTextParagraph().setText("<b>Audit de sécurité</b><br>Sélectionnez un document pour analyser ses risques."));
+  
+  // NOUVELLE SECTION : OFFBOARDING
+  var offboardingSection = CardService.newCardSection().setHeader("Offboarding (Départ employé)");
+  
+  offboardingSection.addWidget(CardService.newTextParagraph()
+    .setText("Révocation en masse des accès pour un collaborateur sur tous vos documents."));
+    
+  var emailInput = CardService.newTextInput()
+    .setFieldName("offboardEmail")
+    .setTitle("Adresse email de l'employé");
+    
+  var searchAction = CardService.newAction()
+    .setFunctionName("handleSearchUserAccess");
+    
+  var searchButton = CardService.newTextButton()
+    .setText("RECHERCHER LES ACCÈS")
+    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+    .setOnClickAction(searchAction);
+    
+  offboardingSection.addWidget(emailInput);
+  offboardingSection.addWidget(CardService.newButtonSet().addButton(searchButton));
+  
+  card.addSection(infoSection);
+  card.addSection(offboardingSection);
   
   return card.build();
 }
@@ -248,4 +272,56 @@ function handleRevokeAccess(e) {
       .setNotification(CardService.newNotification().setText("Erreur lors de la révocation"))
       .build();
   }
+}
+
+// --- OFFBOARDING / MASS REVOKE ---
+
+function handleSearchUserAccess(e) {
+  var email = e.formInput.offboardEmail;
+  if (!email || email.indexOf('@') === -1) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText("Veuillez entrer un email valide."))
+      .build();
+  }
+  
+  var files = searchUserAccess(email);
+  
+  var card = CardService.newCardBuilder()
+    .setHeader(CardService.newCardHeader().setTitle("Offboarding").setSubtitle(email));
+    
+  var section = CardService.newCardSection();
+  
+  if (files.length === 0) {
+    section.addWidget(CardService.newTextParagraph().setText("Aucun accès direct trouvé pour cet utilisateur dans vos fichiers."));
+  } else {
+    section.addWidget(CardService.newTextParagraph().setText("<b>" + files.length + " fichiers ou dossiers</b> trouvés avec un accès direct pour cet utilisateur."));
+    
+    // Bouton pour révoquer partout
+    var revokeAction = CardService.newAction()
+      .setFunctionName("handleMassRevoke")
+      .setParameters({email: email});
+      
+    section.addWidget(CardService.newButtonSet()
+      .addButton(CardService.newTextButton()
+        .setText("RÉVOQUER PARTOUT (" + files.length + ")")
+        .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+        .setBackgroundColor("#d93025")
+        .setOnClickAction(revokeAction)));
+  }
+  
+  card.addSection(section);
+  
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().pushCard(card.build()))
+    .build();
+}
+
+function handleMassRevoke(e) {
+  var email = e.parameters.email;
+  var result = massRevokeUser(email);
+  
+  return CardService.newActionResponseBuilder()
+    .setNotification(CardService.newNotification().setText("Opération terminée : " + result.revokedCount + " accès révoqués avec succès."))
+    .setNavigation(CardService.newNavigation().popCard()) // Retour à l'accueil
+    .build();
 }
