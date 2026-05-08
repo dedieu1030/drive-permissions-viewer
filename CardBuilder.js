@@ -403,9 +403,10 @@ function buildResultsCard(entries, files, showCount) {
     exposedColumns.addColumn(CardService.newColumn()
       .setHorizontalAlignment(CardService.HorizontalAlignment.END)
       .setVerticalAlignment(CardService.VerticalAlignment.CENTER)
-      .addWidget(CardService.newTextButton()
-        .setText("Sélectionner")
-        .setOnClickAction(CardService.newAction().setFunctionName("handleSelectMode"))));
+      .addWidget(CardService.newButtonSet()
+        .addButton(CardService.newTextButton()
+          .setText("Sélectionner")
+          .setOnClickAction(CardService.newAction().setFunctionName("handleSelectMode")))));
     
     s.addWidget(exposedColumns);
 
