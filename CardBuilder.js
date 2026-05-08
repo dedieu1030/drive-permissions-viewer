@@ -111,9 +111,11 @@ function buildPermissionCard(fileId, filterValue) {
   filterValue = filterValue || "ALL";
   var card = CardService.newCardBuilder();
 
+  var headerIcon = details.iconUrl || ICONS.DRIVE;
   card.setHeader(CardService.newCardHeader()
     .setTitle(details.name)
-    .setSubtitle(details.owner));
+    .setSubtitle(details.owner)
+    .setImageUrl(headerIcon));
 
   var s = CardService.newCardSection();
 
