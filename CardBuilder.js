@@ -355,10 +355,13 @@ function handleSearchUserAccess(e) {
 function buildResultsCard(entries, files, showCount) {
   showCount = showCount || 12;
   
-  var card = CardService.newCardBuilder()
-    .setHeader(CardService.newCardHeader().setTitle("Résultats de l'analyse"));
+  var card = CardService.newCardBuilder();
 
   var s = CardService.newCardSection();
+
+  s.addWidget(CardService.newTextParagraph().setText(
+    "<b>Résultats de l'analyse</b>"
+  ));
 
   // Compact email badges via Grid (CardService ne permet pas image+texte dans les boutons)
   var grid = CardService.newGrid()
