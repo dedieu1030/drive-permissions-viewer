@@ -122,15 +122,24 @@ function buildPermissionCard(fileId, filterValue) {
   var scoreColor = details.score > 80 ? "#188038" : (details.score > 40 ? "#e37400" : "#d93025");
   var statusLabel = details.isPublic ? "Public" : (details.hasExternal ? "Externe" : "Privé");
 
-  s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='" + scoreColor + "'><b>" + details.score + "/100</b></font>" +
-    "  <font color='#9aa0a6'>•  " + statusLabel + "</font>"
-  ));
+  // Explication du niveau de risque
+  var riskLabel = "";
+  if (details.score > 80) riskLabel = "Risque faible";
+  else if (details.score > 40) riskLabel = "Risque modéré";
+  else riskLabel = "Risque élevé";
+
+  s.addWidget(CardService.newDecoratedText()
+    .setTopLabel("Score de sécurité")
+    .setText("<font color='" + scoreColor + "'><b>" + details.score + "/100</b></font>  —  " + riskLabel)
+    .setBottomLabel("Visibilité : " + statusLabel)
+    .setStartIcon(CardService.newIconImage().setIconUrl(ICONS.SHIELD)));
 
   var breadcrumbs = details.path.join("  ›  ") || "Mon Drive";
-  s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#9aa0a6'>" + breadcrumbs + "</font>"
-  ));
+  s.addWidget(CardService.newDecoratedText()
+    .setTopLabel("Emplacement dans le Drive")
+    .setText(breadcrumbs)
+    .setWrapText(true)
+    .setStartIcon(CardService.newIconImage().setIconUrl(ICONS.FOLDER)));
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
