@@ -363,33 +363,23 @@ function buildResultsCard(entries, files, showCount) {
     "<b>Résultats de l'analyse</b>"
   ));
 
-  // Compact email badges via Grid (CardService ne permet pas image+texte dans les boutons)
-  var grid = CardService.newGrid()
-    .setNumColumns(3)
-    .setBorderStyle(CardService.newBorderStyle()
-      .setType(CardService.BorderType.NO_BORDER));
-
+  // CardService ne permet pas de créer des "badges/pills" alignés horizontalement contenant à la fois une image ET du texte.
+  // Les seules options sont : ButtonSet (texte uniquement, pas d'avatar) ou DecoratedText (avatar + texte, mais prend une ligne entière).
+  // On utilise DecoratedText pour respecter la demande d'avatar, en limitant à 2.
   var maxItems = Math.min(entries.length, 2);
   for (var i = 0; i < maxItems; i++) {
-    var shortEmail = entries[i].email.split('@')[0];
-    if (shortEmail.length > 12) shortEmail = shortEmail.substring(0, 12) + "…";
-    var iconUrl = entries[i].photo || ICONS.PERSON;
-    
-    grid.addItem(CardService.newGridItem()
-      .setTitle(shortEmail)
-      .setImage(CardService.newImageComponent()
-        .setImageUrl(iconUrl)
-        .setCropStyle(CardService.newImageCropStyle().setImageCropType(CardService.ImageCropType.CIRCLE)))
-      .setTextAlignment(CardService.HorizontalAlignment.START));
+    var entry = entries[i];
+    var iconUrl = entry.photo || ICONS.PERSON;
+    s.addWidget(CardService.newDecoratedText()
+      .setText(entry.email)
+      .setStartIcon(CardService.newIconImage().setIconUrl(iconUrl).setImageCropType(CardService.ImageCropType.CIRCLE)));
   }
 
   if (entries.length > 2) {
-    grid.addItem(CardService.newGridItem()
-      .setTitle("+" + (entries.length - 2))
-      .setTextAlignment(CardService.HorizontalAlignment.CENTER));
+    s.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#9aa0a6'>+" + (entries.length - 2) + " autres collaborateurs</font>"
+    ));
   }
-
-  s.addWidget(grid);
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
