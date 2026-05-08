@@ -304,3 +304,109 @@ function removeFoundFile(fileId) {
 function clearFoundFiles() {
   PropertiesService.getUserProperties().deleteProperty('foundFiles');
 }
+
+/**
+ * Recherche des fichiers/dossiers par nom
+ */
+function searchFilesByName(query) {
+  if (!query || query.trim().length === 0) return [];
+  
+  var files = [];
+  var pageToken = null;
+  var searchQuery = "name contains '" + query.replace(/'/g, "\\'") + "' and trashed = false";
+  
+  try {
+    do {
+      var response = Drive.Files.list({
+        q: searchQuery,
+        fields: "nextPageToken, files(id, name, mimeType, iconLink, owners)",
+        supportsAllDrives: true,
+        pageSize: 20,
+        pageToken: pageToken
+      });
+      
+      if (response.files) {
+        response.files.forEach(function(f) {
+          files.push({
+            id: f.id,
+            name: f.name,
+            mimeType: f.mimeType,
+            icon: f.iconLink || "",
+            isFolder: f.mimeType === "application/vnd.google-apps.folder",
+            owner: f.owners && f.owners.length > 0 ? f.owners[0].emailAddress : "Inconnu"
+          });
+        });
+      }
+      pageToken = response.nextPageToken;
+    } while (pageToken && files.length < 20);
+    
+    return files;
+  } catch(e) {
+    console.error("Erreur searchFilesByName:", e);
+    return [];
+  }
+}
+
+/**
+ * Liste le contenu d'un dossier avec les permissions de chaque fichier
+ */
+function listFolderContentsWithPermissions(folderId) {
+  var results = [];
+  var pageToken = null;
+  
+  try {
+    do {
+      var response = Drive.Files.list({
+        q: "'" + folderId + "' in parents and trashed = false",
+        fields: "nextPageToken, files(id, name, mimeType, iconLink, permissions(emailAddress, role, displayName, photoLink, type, id))",
+        supportsAllDrives: true,
+        pageSize: 50,
+        pageToken: pageToken
+      });
+      
+      if (response.files) {
+        response.files.forEach(function(f) {
+          var perms = [];
+          if (f.permissions) {
+            f.permissions.forEach(function(p) {
+              if (p.type === 'user' || p.type === 'group') {
+                perms.push({
+                  email: p.emailAddress || "",
+                  role: p.role,
+                  displayName: p.displayName || "",
+                  photoLink: p.photoLink || "",
+                  type: p.type,
+                  id: p.id
+                });
+              } else if (p.type === 'anyone') {
+                perms.push({
+                  email: "Public (tous)",
+                  role: p.role,
+                  displayName: "Tous",
+                  photoLink: "",
+                  type: p.type,
+                  id: p.id
+                });
+              }
+            });
+          }
+          
+          results.push({
+            id: f.id,
+            name: f.name,
+            mimeType: f.mimeType,
+            icon: f.iconLink || "",
+            isFolder: f.mimeType === "application/vnd.google-apps.folder",
+            permissions: perms
+          });
+        });
+      }
+      pageToken = response.nextPageToken;
+    } while (pageToken && results.length < 100);
+    
+    return results;
+  } catch(e) {
+    console.error("Erreur listFolderContentsWithPermissions:", e);
+    return [];
+  }
+}

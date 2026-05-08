@@ -86,6 +86,21 @@ function createHomepageCard() {
     .setText("Importer")
     .setOnClickAction(CardService.newAction().setFunctionName("handleImportSheet")));
 
+  s.addWidget(CardService.newTextParagraph().setText("<br>"));
+
+  s.addWidget(CardService.newTextParagraph().setText("<b>Recherche de document</b>"));
+  s.addWidget(CardService.newTextParagraph().setText(
+    "<font color='#9aa0a6'>Recherchez un fichier ou dossier pour voir qui y a accès</font>"
+  ));
+
+  s.addWidget(CardService.newTextInput()
+    .setFieldName("docSearchQuery")
+    .setTitle("Nom du document ou dossier"));
+
+  s.addWidget(CardService.newTextButton()
+    .setText("Rechercher")
+    .setOnClickAction(CardService.newAction().setFunctionName("handleDocSearch")));
+
   card.addSection(s);
   return card.build();
 }
@@ -460,4 +475,135 @@ function handleSelectMode(e) {
   return CardService.newActionResponseBuilder()
     .setNotification(CardService.newNotification().setText("Mode sélection activé (bientôt disponible)"))
     .build();
+}
+
+// ============================================================
+//  DOCUMENT SEARCH
+// ============================================================
+
+function handleDocSearch(e) {
+  var query = e.formInput.docSearchQuery;
+  if (!query || query.trim().length === 0) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText("Entrez un nom de document.")).build();
+  }
+  var results = searchFilesByName(query);
+  var card = buildFileSearchResultsCard(query, results);
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().pushCard(card)).build();
+}
+
+function buildFileSearchResultsCard(query, results) {
+  var card = CardService.newCardBuilder();
+  var s = CardService.newCardSection();
+
+  s.addWidget(CardService.newTextParagraph().setText(
+    "<b>Résultats pour \"" + query + "\"</b>"
+  ));
+
+  if (results.length === 0) {
+    s.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#9aa0a6'>Aucun document trouvé.</font>"
+    ));
+  } else {
+    s.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#9aa0a6'>" + results.length + " résultat" + (results.length > 1 ? "s" : "") + "</font>"
+    ));
+
+    results.forEach(function(file) {
+      var fileIcon = file.icon || ICONS.FOLDER;
+      var subtitle = file.isFolder ? "Dossier" : file.owner;
+      var w = CardService.newDecoratedText()
+        .setText(file.name)
+        .setBottomLabel(subtitle)
+        .setStartIcon(CardService.newIconImage().setIconUrl(fileIcon));
+
+      if (file.isFolder) {
+        w.setOnClickAction(CardService.newAction()
+          .setFunctionName("handleOpenFolder")
+          .setParameters({folderId: file.id, folderName: file.name}));
+      } else {
+        w.setOnClickAction(CardService.newAction()
+          .setFunctionName("handleOpenFilePerms")
+          .setParameters({fileId: file.id}));
+      }
+
+      s.addWidget(w);
+    });
+  }
+
+  card.addSection(s);
+  return card.build();
+}
+
+function handleOpenFilePerms(e) {
+  var card = buildPermissionCard(e.parameters.fileId);
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().pushCard(card)).build();
+}
+
+function handleOpenFolder(e) {
+  var folderId = e.parameters.folderId;
+  var folderName = e.parameters.folderName;
+  var contents = listFolderContentsWithPermissions(folderId);
+  var card = buildFolderContentsCard(folderName, folderId, contents);
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().pushCard(card)).build();
+}
+
+function buildFolderContentsCard(folderName, folderId, contents) {
+  var card = CardService.newCardBuilder()
+    .setHeader(CardService.newCardHeader()
+      .setTitle(folderName)
+      .setSubtitle(contents.length + " éléments")
+      .setImageUrl(ICONS.FOLDER));
+
+  if (contents.length === 0) {
+    var emptySection = CardService.newCardSection();
+    emptySection.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#9aa0a6'>Ce dossier est vide.</font>"
+    ));
+    card.addSection(emptySection);
+  } else {
+    contents.forEach(function(file) {
+      var fileSection = CardService.newCardSection();
+      var fileIcon = file.icon || ICONS.FOLDER;
+
+      // Titre du fichier cliquable
+      var titleWidget = CardService.newDecoratedText()
+        .setText("<b>" + file.name + "</b>")
+        .setStartIcon(CardService.newIconImage().setIconUrl(fileIcon));
+
+      if (file.isFolder) {
+        titleWidget.setOnClickAction(CardService.newAction()
+          .setFunctionName("handleOpenFolder")
+          .setParameters({folderId: file.id, folderName: file.name}));
+      } else {
+        titleWidget.setOnClickAction(CardService.newAction()
+          .setFunctionName("handleOpenFilePerms")
+          .setParameters({fileId: file.id}));
+      }
+      fileSection.addWidget(titleWidget);
+
+      // Permissions de ce fichier
+      if (file.permissions && file.permissions.length > 0) {
+        file.permissions.forEach(function(p) {
+          var roleLabel = getRoleLabel(p.role);
+          var avatarUrl = p.photoLink ? (p.photoLink.startsWith('//') ? 'https:' + p.photoLink : p.photoLink) : ICONS.PERSON;
+          fileSection.addWidget(CardService.newDecoratedText()
+            .setText(p.email)
+            .setBottomLabel(roleLabel)
+            .setStartIcon(CardService.newIconImage().setIconUrl(avatarUrl).setImageCropType(CardService.ImageCropType.CIRCLE)));
+        });
+      } else {
+        fileSection.addWidget(CardService.newTextParagraph().setText(
+          "<font color='#9aa0a6'>Aucun accès partagé</font>"
+        ));
+      }
+
+      card.addSection(fileSection);
+    });
+  }
+
+  return card.build();
 }
