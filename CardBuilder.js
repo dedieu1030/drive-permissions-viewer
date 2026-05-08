@@ -363,50 +363,20 @@ function buildResultsCard(entries, files, showCount) {
     "<b>Résultats de l'analyse</b>"
   ));
 
-  // Tentative de création de "chips" horizontaux. 
-  // Note: CardService est très limité. On essaie d'utiliser Columns si disponible, sinon on reste sur un affichage propre.
-  try {
-    var maxItems = Math.min(entries.length, 2);
-    var columns = CardService.newColumns();
-    
-    for (var i = 0; i < maxItems; i++) {
-      var entry = entries[i];
-      var iconUrl = entry.photo || ICONS.PERSON;
-      var shortEmail = entry.email.split('@')[0];
-      if (shortEmail.length > 10) shortEmail = shortEmail.substring(0, 10) + "…";
-      
-      // Colonne pour l'avatar
-      columns.addColumn(CardService.newColumn()
-        .setHorizontalSizeStyle(CardService.HorizontalSizeStyle.FILL_MINIMUM_SPACE)
-        .addWidget(CardService.newImage()
-          .setImageUrl(iconUrl)
-          .setCropStyle(CardService.newImageCropStyle().setImageCropType(CardService.ImageCropType.CIRCLE))));
-      
-      // Colonne pour le texte
-      columns.addColumn(CardService.newColumn()
-        .setVerticalAlignment(CardService.VerticalAlignment.CENTER)
-        .addWidget(CardService.newTextParagraph().setText("<font color='#1f1f1f'>" + shortEmail + "</font>")));
-    }
-    
-    if (entries.length > 2) {
-      columns.addColumn(CardService.newColumn()
-        .setVerticalAlignment(CardService.VerticalAlignment.CENTER)
-        .addWidget(CardService.newTextParagraph().setText("<font color='#9aa0a6'> +" + (entries.length - 2) + "</font>")));
-    }
-    s.addWidget(columns);
-  } catch (e) {
-    // Fallback si Columns n'est pas supporté : Liste compacte de DecoratedText
-    var maxItemsFallback = Math.min(entries.length, 2);
-    for (var i = 0; i < maxItemsFallback; i++) {
-      var entryFallback = entries[i];
-      var iconUrlFallback = entryFallback.photo || ICONS.PERSON;
-      s.addWidget(CardService.newDecoratedText()
-        .setText(entryFallback.email)
-        .setStartIcon(CardService.newIconImage().setIconUrl(iconUrlFallback).setImageCropType(CardService.ImageCropType.CIRCLE)));
-    }
-    if (entries.length > 2) {
-      s.addWidget(CardService.newTextParagraph().setText("<font color='#9aa0a6'>+" + (entries.length - 2) + " autres</font>"));
-    }
+  // Retour au système vertical car le SDK ne supporte pas bien l'horizontal avec avatars
+  var maxItems = Math.min(entries.length, 2);
+  for (var i = 0; i < maxItems; i++) {
+    var entry = entries[i];
+    var iconUrl = entry.photo || ICONS.PERSON;
+    s.addWidget(CardService.newDecoratedText()
+      .setText(entry.email)
+      .setStartIcon(CardService.newIconImage().setIconUrl(iconUrl).setImageCropType(CardService.ImageCropType.CIRCLE)));
+  }
+
+  if (entries.length > 2) {
+    s.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#9aa0a6'>+" + (entries.length - 2) + " autres collaborateurs</font>"
+    ));
   }
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));

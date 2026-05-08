@@ -3,7 +3,6 @@
  * Runs when the user opens the add-on without selecting any file.
  */
 function onHomepage(e) {
-  console.log("Columns exist? " + testColumnsExist());
   return createHomepageCard();
 }
 
@@ -17,13 +16,4 @@ function onDriveItemsSelected(e) {
     return createMultipleItemsCard();
   }
   return buildPermissionCard(items[0].id);
-}
-
-function testColumnsExist() {
-  try {
-    var c = CardService.newColumns();
-    return "Yes";
-  } catch(e) {
-    return "No: " + e.message;
-  }
 }
