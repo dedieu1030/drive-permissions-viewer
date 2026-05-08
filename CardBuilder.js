@@ -360,20 +360,33 @@ function buildResultsCard(entries, files, showCount) {
 
   var s = CardService.newCardSection();
 
-  // Compact email badges via ButtonSet
-  var badgeSet = CardService.newButtonSet();
-  var badgeCount = Math.min(entries.length, 2);
-  for (var i = 0; i < badgeCount; i++) {
+  // Compact email badges via Grid (CardService ne permet pas image+texte dans les boutons)
+  var grid = CardService.newGrid()
+    .setNumColumns(3)
+    .setBorderStyle(CardService.newBorderStyle()
+      .setType(CardService.BorderType.NO_BORDER));
+
+  var maxItems = Math.min(entries.length, 2);
+  for (var i = 0; i < maxItems; i++) {
     var shortEmail = entries[i].email.split('@')[0];
     if (shortEmail.length > 12) shortEmail = shortEmail.substring(0, 12) + "…";
-    badgeSet.addButton(CardService.newTextButton().setText(shortEmail)
-      .setOnClickAction(CardService.newAction().setFunctionName("noOp")));
+    var iconUrl = entries[i].photo || ICONS.PERSON;
+    
+    grid.addItem(CardService.newGridItem()
+      .setTitle(shortEmail)
+      .setImage(CardService.newImageComponent()
+        .setImageUrl(iconUrl)
+        .setCropStyle(CardService.newImageCropStyle().setImageCropType(CardService.ImageCropType.CIRCLE)))
+      .setTextAlignment(CardService.HorizontalAlignment.START));
   }
+
   if (entries.length > 2) {
-    badgeSet.addButton(CardService.newTextButton().setText("+" + (entries.length - 2))
-      .setOnClickAction(CardService.newAction().setFunctionName("noOp")));
+    grid.addItem(CardService.newGridItem()
+      .setTitle("+" + (entries.length - 2))
+      .setTextAlignment(CardService.HorizontalAlignment.CENTER));
   }
-  s.addWidget(badgeSet);
+
+  s.addWidget(grid);
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
