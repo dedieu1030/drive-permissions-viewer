@@ -26,6 +26,10 @@
       "homepageTrigger": {
         "runFunction": "onHomepage",
         "enabled": true
+      },
+      "layoutProperties": {
+        "primaryColor": "#a8c7fa",
+        "secondaryColor": "#d3e3fd"
       }
     },
     "drive": {

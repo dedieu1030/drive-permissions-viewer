@@ -17,7 +17,7 @@ function createHomepageCard() {
   var s = CardService.newCardSection();
 
   s.addWidget(CardService.newTextParagraph().setText(
-    "<b>Audit de sécurité Drive</b>"
+    "<font color='#0842a0'><b>Audit de sécurité Drive</b></font>"
   ));
   s.addWidget(CardService.newTextParagraph().setText(
     "<b>Auditer vos fichiers depuis Google Drive™️</b><br>" +
@@ -41,7 +41,7 @@ function createHomepageCard() {
   s.addWidget(CardService.newTextButton()
     .setText("Rechercher")
     .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-    .setBackgroundColor("#0b57d0")
+    .setBackgroundColor("#a8c7fa")
     .setOnClickAction(CardService.newAction().setFunctionName("handleDocSearch")));
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
@@ -56,7 +56,7 @@ function createHomepageCard() {
   s.addWidget(CardService.newTextButton()
     .setText("Ajouter")
     .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-    .setBackgroundColor("#0b57d0")
+    .setBackgroundColor("#a8c7fa")
     .setOnClickAction(CardService.newAction().setFunctionName("handleAddEmail")));
 
   if (entries.length > 0) {
@@ -89,7 +89,7 @@ function createHomepageCard() {
       .addButton(CardService.newTextButton()
         .setText("Lancer l'analyse")
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-        .setBackgroundColor("#0b57d0")
+        .setBackgroundColor("#a8c7fa")
         .setOnClickAction(CardService.newAction().setFunctionName("handleSearchUserAccess")))
       .addButton(CardService.newTextButton()
         .setText("Vider")
@@ -109,7 +109,7 @@ function createHomepageCard() {
   s.addWidget(CardService.newTextButton()
     .setText("Importer")
     .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-    .setBackgroundColor("#0b57d0")
+    .setBackgroundColor("#a8c7fa")
     .setOnClickAction(CardService.newAction().setFunctionName("handleImportSheet")));
 
   card.addSection(s);
