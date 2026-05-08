@@ -7,7 +7,8 @@ var ICONS = {
   GROUP: "https://www.gstatic.com/images/icons/material/system/1x/group_black_48dp.png",
   EDIT: "https://www.gstatic.com/images/icons/material/system/1x/edit_black_48dp.png",
   VIEW: "https://www.gstatic.com/images/icons/material/system/1x/visibility_black_48dp.png",
-  PATH: "https://www.gstatic.com/images/icons/material/system/1x/folder_open_black_48dp.png"
+  PATH: "https://www.gstatic.com/images/icons/material/system/1x/folder_open_black_48dp.png",
+  DELETE: "https://www.gstatic.com/images/icons/material/system/1x/delete_black_48dp.png"
 };
 
 function createHomepageCard() {
@@ -17,33 +18,71 @@ function createHomepageCard() {
     .setImageUrl(ICONS.SHIELD)
     .setImageStyle(CardService.ImageStyle.CIRCLE));
   
-  var infoSection = CardService.newCardSection()
-    .addWidget(CardService.newTextParagraph().setText("<b>Audit de sécurité</b><br>Sélectionnez un document pour analyser ses risques."));
+  var emails = getOffboardEmails();
   
-  // NOUVELLE SECTION : OFFBOARDING
+  // Section 1 : Offboarding
   var offboardingSection = CardService.newCardSection().setHeader("Offboarding (Départ employé)");
   
+  // Saisie manuelle
+  offboardingSection.addWidget(CardService.newTextInput()
+    .setFieldName("newEmail")
+    .setTitle("Ajouter un collaborateur (Email)"));
+    
+  offboardingSection.addWidget(CardService.newButtonSet()
+    .addButton(CardService.newTextButton()
+      .setText("+ AJOUTER")
+      .setOnClickAction(CardService.newAction().setFunctionName("handleAddEmail"))));
+      
+  // Import Excel/Sheets
   offboardingSection.addWidget(CardService.newTextParagraph()
-    .setText("Révocation en masse des accès. Séparez plusieurs emails par des virgules."));
+    .setText("<br><b>Import en masse (Excel / Sheets)</b><br><i>Format requis : Copiez vos emails dans la colonne A d'un Google Sheets, puis collez son lien ici.</i>"));
     
-  var emailInput = CardService.newTextInput()
-    .setMultiline(true)
-    .setFieldName("offboardEmail")
-    .setTitle("Collez les emails ici (1 par ligne, ou depuis Excel)");
+  offboardingSection.addWidget(CardService.newTextInput()
+    .setFieldName("sheetUrl")
+    .setTitle("Lien de la feuille Google Sheets"));
     
-  var searchAction = CardService.newAction()
-    .setFunctionName("handleSearchUserAccess");
-    
-  var searchButton = CardService.newTextButton()
-    .setText("RECHERCHER LES ACCÈS")
-    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-    .setOnClickAction(searchAction);
-    
-  offboardingSection.addWidget(emailInput);
-  offboardingSection.addWidget(CardService.newButtonSet().addButton(searchButton));
-  
-  card.addSection(infoSection);
+  offboardingSection.addWidget(CardService.newButtonSet()
+    .addButton(CardService.newTextButton()
+      .setText("IMPORTER LA LISTE")
+      .setOnClickAction(CardService.newAction().setFunctionName("handleImportSheet"))));
+      
   card.addSection(offboardingSection);
+
+  // Section 2 : Liste d'attente
+  if (emails.length > 0) {
+    var listSection = CardService.newCardSection().setHeader("Cibles à révoquer (" + emails.length + ")");
+    
+    emails.slice(0, 10).forEach(function(em) {
+      listSection.addWidget(CardService.newDecoratedText()
+        .setText(em)
+        .setButton(CardService.newImageButton()
+          .setIconUrl(ICONS.DELETE)
+          .setOnClickAction(CardService.newAction().setFunctionName("handleRemoveEmail").setParameters({email: em}))));
+    });
+    
+    if (emails.length > 10) {
+      listSection.addWidget(CardService.newTextParagraph().setText("<i>... et " + (emails.length - 10) + " autres adresses.</i>"));
+    }
+    
+    listSection.addWidget(CardService.newButtonSet()
+      .addButton(CardService.newTextButton()
+        .setText("LANCER L'ANALYSE")
+        .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+        .setBackgroundColor("#188038")
+        .setOnClickAction(CardService.newAction().setFunctionName("handleSearchUserAccess")))
+      .addButton(CardService.newTextButton()
+        .setText("VIDER")
+        .setOnClickAction(CardService.newAction().setFunctionName("handleClearEmails"))));
+        
+    card.addSection(listSection);
+  }
+  
+  // Section 3 : Audit classique
+  var infoSection = CardService.newCardSection()
+    .setHeader("Audit individuel")
+    .addWidget(CardService.newTextParagraph().setText("Sélectionnez un document dans votre Drive pour analyser ses accès spécifiques."));
+    
+  card.addSection(infoSection);
   
   return card.build();
 }
@@ -62,16 +101,12 @@ function buildPermissionCard(fileId, filterValue) {
   filterValue = filterValue || "ALL";
   var card = CardService.newCardBuilder();
   
-  // Header ultra compact
   card.setHeader(CardService.newCardHeader()
     .setTitle(details.name)
     .setImageUrl(ICONS.DRIVE)
     .setImageStyle(CardService.ImageStyle.CIRCLE));
 
-  // --- SECTION 1 : AUDIT RÉSUMÉ (Compact) ---
   var summarySection = CardService.newCardSection();
-  
-  // Score & Statut combinés
   var scoreColor = details.score > 80 ? "#188038" : (details.score > 40 ? "#e37400" : "#d93025");
   var statusText = details.isPublic ? "PUBLIC" : (details.hasExternal ? "EXTERNE" : "PRIVÉ");
   
@@ -79,21 +114,18 @@ function buildPermissionCard(fileId, filterValue) {
     .setText("<font color='" + scoreColor + "'><b>Score : " + details.score + "/100 • " + statusText + "</b></font>")
     .setStartIcon(CardService.newIconImage().setIconUrl(ICONS.SHIELD)));
 
-  // Hiérarchie simplifiée
   var breadcrumbs = details.path.join(" > ") || "Mon Drive";
   summarySection.addWidget(CardService.newDecoratedText()
     .setTopLabel("Emplacement")
     .setText("<font color='#5f6368'>" + breadcrumbs + "</font>")
     .setWrapText(true));
     
-  // Propriétaire (intégré ici pour gagner de la place)
   summarySection.addWidget(CardService.newDecoratedText()
     .setTopLabel("Propriétaire")
     .setText("<b>" + details.owner + "</b>"));
 
   card.addSection(summarySection);
 
-  // --- SECTION 2 : FILTRES ---
   var filterSection = CardService.newCardSection();
   filterSection.addWidget(CardService.newSelectionInput()
     .setType(CardService.SelectionInputType.DROPDOWN)
@@ -106,7 +138,6 @@ function buildPermissionCard(fileId, filterValue) {
     
   card.addSection(filterSection);
 
-  // --- SECTION 3 : LISTE DES MEMBRES (Défilable naturellement) ---
   var accessSection = CardService.newCardSection().setHeader("Membres ayant accès");
   var allPerms = details.directPermissions.concat(details.inheritedPermissions);
   
@@ -130,7 +161,6 @@ function buildPermissionCard(fileId, filterValue) {
         .setText(nameText);
         
       if (avatarUrl) {
-        // Forme circulaire pour l'avatar
         decoratedText.setStartIcon(CardService.newIconImage()
           .setIconUrl(avatarUrl)
           .setImageCropType(CardService.ImageCropType.CIRCLE));
@@ -153,7 +183,6 @@ function buildPermissionCard(fileId, filterValue) {
   }
   card.addSection(accessSection);
 
-  // --- SECTION 4 : FOOTER ---
   card.addSection(CardService.newCardSection()
     .addWidget(CardService.newTextButton()
       .setText("EXPORTER L'AUDIT")
@@ -178,8 +207,6 @@ function getRoleLabel(role) {
 function handleExportClick(e) {
   return CardService.newActionResponseBuilder().setNotification(CardService.newNotification().setText("Audit exporté.")).build();
 }
-
-// --- NOUVELLES ACTIONS (MODIFICATION) ---
 
 function handleMemberClick(e) {
   var fileId = e.parameters.fileId;
@@ -217,7 +244,6 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
   } else if (isInherited) {
     section.addWidget(CardService.newTextParagraph().setText("<i>Cet accès est hérité d'un dossier parent. Vous devez modifier le dossier parent pour changer cet accès.</i>"));
   } else {
-    // Actions de modification
     section.addWidget(CardService.newSelectionInput()
       .setType(CardService.SelectionInputType.DROPDOWN)
       .setTitle("Changer le rôle")
@@ -242,7 +268,6 @@ function handleChangeRole(e) {
   var fileId = e.parameters.fileId;
   var permId = e.parameters.permId;
   var newRole = e.formInput.newRole;
-  
   var success = updatePermissionRole(fileId, permId, newRole);
   
   if (success) {
@@ -260,7 +285,6 @@ function handleChangeRole(e) {
 function handleRevokeAccess(e) {
   var fileId = e.parameters.fileId;
   var permId = e.parameters.permId;
-  
   var success = revokePermission(fileId, permId);
   
   if (success) {
@@ -275,23 +299,79 @@ function handleRevokeAccess(e) {
   }
 }
 
-// --- OFFBOARDING / MASS REVOKE ---
+// --- OFFBOARDING / MASS REVOKE MANAGERS ---
+
+function handleAddEmail(e) {
+  var email = e.formInput.newEmail;
+  if (email) {
+    addOffboardEmail(email);
+  }
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard()))
+    .build();
+}
+
+function handleRemoveEmail(e) {
+  var email = e.parameters.email;
+  removeOffboardEmail(email);
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard()))
+    .build();
+}
+
+function handleClearEmails(e) {
+  clearOffboardEmails();
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard()))
+    .build();
+}
+
+function handleImportSheet(e) {
+  var url = e.formInput.sheetUrl;
+  if (!url) {
+    return CardService.newActionResponseBuilder().setNotification(CardService.newNotification().setText("Veuillez entrer un lien.")).build();
+  }
+  try {
+    var ss = SpreadsheetApp.openByUrl(url);
+    var sheet = ss.getActiveSheet();
+    var data = sheet.getRange("A1:A1000").getValues(); // Limite à 1000 lignes
+    var newEmails = [];
+    for (var i = 0; i < data.length; i++) {
+      var val = String(data[i][0]).trim();
+      if (val && val.indexOf('@') !== -1) {
+        newEmails.push(val);
+      }
+    }
+    if (newEmails.length > 0) {
+      addOffboardEmails(newEmails);
+      return CardService.newActionResponseBuilder()
+        .setNotification(CardService.newNotification().setText(newEmails.length + " emails importés avec succès !"))
+        .setNavigation(CardService.newNavigation().updateCard(createHomepageCard()))
+        .build();
+    } else {
+      return CardService.newActionResponseBuilder().setNotification(CardService.newNotification().setText("Aucun email trouvé dans la colonne A.")).build();
+    }
+  } catch (err) {
+    return CardService.newActionResponseBuilder().setNotification(CardService.newNotification().setText("Erreur : le lien est invalide ou vous n'avez pas accès au fichier.")).build();
+  }
+}
 
 function handleSearchUserAccess(e) {
-  var emailInput = e.formInput.offboardEmail;
-  if (!emailInput || emailInput.indexOf('@') === -1) {
+  var emails = getOffboardEmails();
+  if (emails.length === 0) {
     return CardService.newActionResponseBuilder()
-      .setNotification(CardService.newNotification().setText("Veuillez entrer au moins un email valide."))
+      .setNotification(CardService.newNotification().setText("Veuillez ajouter au moins un email."))
       .build();
   }
   
+  var emailInput = emails.join(',');
   var files = searchUserAccess(emailInput);
   
   var card = CardService.newCardBuilder()
     .setHeader(CardService.newCardHeader().setTitle("Offboarding").setSubtitle("Analyse des accès"));
     
   var section = CardService.newCardSection();
-  section.addWidget(CardService.newTextParagraph().setText("<b>Cibles :</b> " + emailInput));
+  section.addWidget(CardService.newTextParagraph().setText("<b>Cibles :</b> " + emails.length + " collaborateurs"));
   
   if (files.length === 0) {
     section.addWidget(CardService.newTextParagraph().setText("Aucun accès direct trouvé pour ces utilisateurs."));
@@ -299,8 +379,6 @@ function handleSearchUserAccess(e) {
   } else {
     section.addWidget(CardService.newTextParagraph().setText("<b>" + files.length + " fichiers/dossiers exposés :</b>"));
     
-    // Afficher la liste des fichiers
-    // On limite l'affichage à 15 pour ne pas exploser l'UI
     var displayCount = Math.min(files.length, 15);
     for (var i = 0; i < displayCount; i++) {
       section.addWidget(CardService.newDecoratedText()

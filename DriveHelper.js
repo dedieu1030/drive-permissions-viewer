@@ -206,3 +206,40 @@ function massRevokeUser(emailInput) {
     revokedCount: revokedCount
   };
 }
+
+// --- STATE MANAGEMENT ---
+function getOffboardEmails() {
+  var props = PropertiesService.getUserProperties();
+  var emails = props.getProperty('offboardEmails');
+  return emails ? JSON.parse(emails) : [];
+}
+
+function addOffboardEmail(email) {
+  var emails = getOffboardEmails();
+  email = email.trim().toLowerCase();
+  if (email && email.indexOf('@') !== -1 && emails.indexOf(email) === -1) {
+    emails.push(email);
+    PropertiesService.getUserProperties().setProperty('offboardEmails', JSON.stringify(emails));
+  }
+}
+
+function addOffboardEmails(newEmails) {
+  var emails = getOffboardEmails();
+  newEmails.forEach(function(email) {
+    email = email.trim().toLowerCase();
+    if (email && email.indexOf('@') !== -1 && emails.indexOf(email) === -1) {
+      emails.push(email);
+    }
+  });
+  PropertiesService.getUserProperties().setProperty('offboardEmails', JSON.stringify(emails));
+}
+
+function removeOffboardEmail(email) {
+  var emails = getOffboardEmails();
+  emails = emails.filter(function(e) { return e !== email; });
+  PropertiesService.getUserProperties().setProperty('offboardEmails', JSON.stringify(emails));
+}
+
+function clearOffboardEmails() {
+  PropertiesService.getUserProperties().deleteProperty('offboardEmails');
+}

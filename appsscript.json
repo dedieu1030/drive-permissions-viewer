@@ -1,5 +1,5 @@
 {
-  "timeZone": "America/New_York",
+  "timeZone": "Europe/Paris",
   "dependencies": {
     "enabledAdvancedServices": [
       {
@@ -12,28 +12,22 @@
   "exceptionLogging": "STACKDRIVER",
   "oauthScopes": [
     "https://www.googleapis.com/auth/drive.addons.metadata.readonly",
+    "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/userinfo.email"
+    "https://www.googleapis.com/auth/spreadsheets.readonly"
   ],
   "runtimeVersion": "V8",
   "addOns": {
     "common": {
       "name": "Drive Permissions Viewer",
-      "logoUrl": "https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png",
-      "layoutProperties": {
-        "primaryColor": "#1a73e8",
-        "secondaryColor": "#1a73e8"
-      },
+      "logoUrl": "https://www.gstatic.com/images/icons/material/system/1x/security_black_48dp.png",
+      "useLocaleFromApp": true,
       "homepageTrigger": {
         "runFunction": "onHomepage",
         "enabled": true
       }
     },
     "drive": {
-      "homepageTrigger": {
-        "runFunction": "onHomepage",
-        "enabled": true
-      },
       "onItemsSelectedTrigger": {
         "runFunction": "onDriveItemsSelected"
       }
