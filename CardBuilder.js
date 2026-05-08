@@ -352,71 +352,93 @@ function handleSearchUserAccess(e) {
     .setNavigation(CardService.newNavigation().pushCard(card)).build();
 }
 
-function buildResultsCard(entries, files) {
+function buildResultsCard(entries, files, showCount) {
+  showCount = showCount || 12;
+  
   var card = CardService.newCardBuilder()
     .setHeader(CardService.newCardHeader().setTitle("Résultats de l'analyse"));
 
-  // Section 1 : Aperçu des collaborateurs ciblés
-  var emailSection = CardService.newCardSection();
+  var s = CardService.newCardSection();
 
-  var previewCount = Math.min(entries.length, 3);
-  for (var i = 0; i < previewCount; i++) {
-    var entry = entries[i];
-    var iconUrl = entry.photo || ICONS.PERSON;
-    emailSection.addWidget(CardService.newDecoratedText()
-      .setText(entry.email)
-      .setStartIcon(CardService.newIconImage().setIconUrl(iconUrl).setImageCropType(CardService.ImageCropType.CIRCLE)));
+  // Compact email badges via ButtonSet
+  var badgeSet = CardService.newButtonSet();
+  var badgeCount = Math.min(entries.length, 2);
+  for (var i = 0; i < badgeCount; i++) {
+    var shortEmail = entries[i].email.split('@')[0];
+    if (shortEmail.length > 12) shortEmail = shortEmail.substring(0, 12) + "…";
+    badgeSet.addButton(CardService.newTextButton().setText(shortEmail)
+      .setOnClickAction(CardService.newAction().setFunctionName("noOp")));
   }
-  if (entries.length > 3) {
-    emailSection.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>+" + (entries.length - 3) + " autre" + ((entries.length - 3) > 1 ? "s" : "") + "</font>"
-    ));
+  if (entries.length > 2) {
+    badgeSet.addButton(CardService.newTextButton().setText("+" + (entries.length - 2))
+      .setOnClickAction(CardService.newAction().setFunctionName("noOp")));
   }
-  card.addSection(emailSection);
+  s.addWidget(badgeSet);
 
-  // Section 2 : Fichiers exposés
-  var fileSection = CardService.newCardSection();
+  s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
   if (files.length === 0) {
-    fileSection.addWidget(CardService.newTextParagraph().setText(
+    s.addWidget(CardService.newTextParagraph().setText(
       "<font color='#9aa0a6'>Aucun accès trouvé.</font>"
     ));
   } else {
-    fileSection.addWidget(CardService.newTextParagraph().setText(
+    s.addWidget(CardService.newTextParagraph().setText(
       "<b>" + files.length + " élément" + (files.length > 1 ? "s" : "") + " exposé" + (files.length > 1 ? "s" : "") + "</b>"
     ));
 
-    // Afficher TOUS les fichiers avec icône + bouton supprimer
-    for (var j = 0; j < files.length; j++) {
+    var displayCount = Math.min(files.length, showCount);
+    for (var j = 0; j < displayCount; j++) {
       var file = files[j];
       var fileIcon = file.icon || ICONS.FOLDER;
-      fileSection.addWidget(CardService.newDecoratedText()
+      s.addWidget(CardService.newDecoratedText()
         .setText(file.name)
         .setStartIcon(CardService.newIconImage().setIconUrl(fileIcon))
         .setButton(CardService.newImageButton()
           .setIconUrl(ICONS.DELETE)
-          .setOnClickAction(CardService.newAction().setFunctionName("handleRemoveFile").setParameters({fileId: file.id}))));
+          .setOnClickAction(CardService.newAction().setFunctionName("handleRemoveFile").setParameters({fileId: file.id, show: String(showCount)}))));
     }
 
-    fileSection.addWidget(CardService.newTextParagraph().setText("<br>"));
+    // Bouton "Voir plus" si il reste des fichiers
+    if (files.length > showCount) {
+      var remaining = files.length - showCount;
+      s.addWidget(CardService.newTextButton()
+        .setText("Voir plus (" + remaining + " restants)")
+        .setOnClickAction(CardService.newAction().setFunctionName("handleShowMore").setParameters({show: String(showCount + 12)})));
+    }
+
+    s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     var emailInput = entries.map(function(e) { return e.email; }).join(',');
-    fileSection.addWidget(CardService.newTextButton()
+    s.addWidget(CardService.newTextButton()
       .setText("Révoquer tous les accès (" + files.length + ")")
       .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
       .setBackgroundColor("#d93025")
       .setOnClickAction(CardService.newAction().setFunctionName("handleMassRevoke").setParameters({email: emailInput})));
   }
 
-  card.addSection(fileSection);
+  card.addSection(s);
   return card.build();
+}
+
+function noOp(e) {
+  return CardService.newActionResponseBuilder().build();
+}
+
+function handleShowMore(e) {
+  var newShow = parseInt(e.parameters.show, 10) || 24;
+  var files = getFoundFiles();
+  var entries = getOffboardEntries();
+  var card = buildResultsCard(entries, files, newShow);
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().updateCard(card)).build();
 }
 
 function handleRemoveFile(e) {
   var fileId = e.parameters.fileId;
+  var showCount = parseInt(e.parameters.show, 10) || 12;
   var remainingFiles = removeFoundFile(fileId);
   var entries = getOffboardEntries();
-  var card = buildResultsCard(entries, remainingFiles);
+  var card = buildResultsCard(entries, remainingFiles, showCount);
   return CardService.newActionResponseBuilder()
     .setNavigation(CardService.newNavigation().updateCard(card)).build();
 }
