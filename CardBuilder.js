@@ -375,9 +375,19 @@ function buildResultsCard(entries, files, showCount) {
       "<font color='#9aa0a6'>Aucun accès trouvé.</font>"
     ));
   } else {
-    s.addWidget(CardService.newTextParagraph().setText(
-      "<b>" + files.length + " élément" + (files.length > 1 ? "s" : "") + " exposé" + (files.length > 1 ? "s" : "") + "</b>"
-    ));
+    var exposedColumns = CardService.newColumns();
+    exposedColumns.addColumn(CardService.newColumn()
+      .setVerticalAlignment(CardService.VerticalAlignment.CENTER)
+      .addWidget(CardService.newTextParagraph().setText("<b>" + files.length + " éléments exposés</b>")));
+    
+    exposedColumns.addColumn(CardService.newColumn()
+      .setHorizontalAlignment(CardService.HorizontalAlignment.END)
+      .setVerticalAlignment(CardService.VerticalAlignment.CENTER)
+      .addWidget(CardService.newTextButton()
+        .setText("Sélectionner")
+        .setOnClickAction(CardService.newAction().setFunctionName("handleSelectMode"))));
+    
+    s.addWidget(exposedColumns);
 
     var displayCount = Math.min(files.length, showCount);
     for (var j = 0; j < displayCount; j++) {
@@ -445,3 +455,9 @@ function handleMassRevoke(e) {
     .setNavigation(CardService.newNavigation().popCard().updateCard(createHomepageCard())).build();
 }
 
+
+function handleSelectMode(e) {
+  return CardService.newActionResponseBuilder()
+    .setNotification(CardService.newNotification().setText("Mode sélection activé (bientôt disponible)"))
+    .build();
+}
