@@ -20,11 +20,28 @@ function createHomepageCard() {
     "<b>Audit de sécurité Drive</b>"
   ));
   s.addWidget(CardService.newTextParagraph().setText(
-    "Sélectionnez un document pour analyser ses permissions, ou lancez un offboarding ci-dessous."
+    "Recherchez un document ou lancez un offboarding ci-dessous."
   ));
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
+  // --- RECHERCHE DE DOCUMENT (en haut) ---
+  s.addWidget(CardService.newTextParagraph().setText("<b>Recherche de document</b>"));
+  s.addWidget(CardService.newTextParagraph().setText(
+    "<font color='#9aa0a6'>Recherchez un fichier ou dossier pour voir qui y a accès</font>"
+  ));
+
+  s.addWidget(CardService.newTextInput()
+    .setFieldName("docSearchQuery")
+    .setTitle("Nom du document ou dossier"));
+
+  s.addWidget(CardService.newTextButton()
+    .setText("Rechercher")
+    .setOnClickAction(CardService.newAction().setFunctionName("handleDocSearch")));
+
+  s.addWidget(CardService.newTextParagraph().setText("<br>"));
+
+  // --- OFFBOARDING (en bas) ---
   s.addWidget(CardService.newTextParagraph().setText("<b>Offboarding</b>"));
 
   s.addWidget(CardService.newTextInput()
@@ -85,21 +102,6 @@ function createHomepageCard() {
   s.addWidget(CardService.newTextButton()
     .setText("Importer")
     .setOnClickAction(CardService.newAction().setFunctionName("handleImportSheet")));
-
-  s.addWidget(CardService.newTextParagraph().setText("<br>"));
-
-  s.addWidget(CardService.newTextParagraph().setText("<b>Recherche de document</b>"));
-  s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#9aa0a6'>Recherchez un fichier ou dossier pour voir qui y a accès</font>"
-  ));
-
-  s.addWidget(CardService.newTextInput()
-    .setFieldName("docSearchQuery")
-    .setTitle("Nom du document ou dossier"));
-
-  s.addWidget(CardService.newTextButton()
-    .setText("Rechercher")
-    .setOnClickAction(CardService.newAction().setFunctionName("handleDocSearch")));
 
   card.addSection(s);
   return card.build();
