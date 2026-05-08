@@ -12,7 +12,7 @@ var ICONS = {
 
 function createHomepageCard() {
   var card = CardService.newCardBuilder();
-  var emails = getOffboardEmails();
+  var entries = getOffboardEntries();
 
   var s = CardService.newCardSection();
 
@@ -35,25 +35,27 @@ function createHomepageCard() {
     .setText("Ajouter")
     .setOnClickAction(CardService.newAction().setFunctionName("handleAddEmail")));
 
-  if (emails.length > 0) {
+  if (entries.length > 0) {
     s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>" + emails.length + " collaborateur" + (emails.length > 1 ? "s" : "") + "</font>"
+      "<font color='#9aa0a6'>" + entries.length + " collaborateur" + (entries.length > 1 ? "s" : "") + "</font>"
     ));
 
-    var showCount = Math.min(emails.length, 8);
+    var showCount = Math.min(entries.length, 8);
     for (var i = 0; i < showCount; i++) {
+      var entry = entries[i];
+      var iconUrl = entry.photo || ICONS.PERSON;
       s.addWidget(CardService.newDecoratedText()
-        .setText(emails[i])
-        .setStartIcon(CardService.newIconImage().setIconUrl(ICONS.PERSON).setImageCropType(CardService.ImageCropType.CIRCLE))
+        .setText(entry.email)
+        .setStartIcon(CardService.newIconImage().setIconUrl(iconUrl).setImageCropType(CardService.ImageCropType.CIRCLE))
         .setButton(CardService.newImageButton()
           .setIconUrl(ICONS.DELETE)
-          .setOnClickAction(CardService.newAction().setFunctionName("handleRemoveEmail").setParameters({email: emails[i]}))));
+          .setOnClickAction(CardService.newAction().setFunctionName("handleRemoveEmail").setParameters({email: entry.email}))));
     }
-    if (emails.length > 8) {
+    if (entries.length > 8) {
       s.addWidget(CardService.newTextParagraph().setText(
-        "<font color='#9aa0a6'>+" + (emails.length - 8) + " autres</font>"
+        "<font color='#9aa0a6'>+" + (entries.length - 8) + " autres</font>"
       ));
     }
 

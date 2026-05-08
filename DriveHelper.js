@@ -209,38 +209,74 @@ function massRevokeUser(emailInput) {
 }
 
 // --- STATE MANAGEMENT ---
-function getOffboardEmails() {
+
+function getOffboardEntries() {
   var props = PropertiesService.getUserProperties();
-  var emails = props.getProperty('offboardEmails');
-  return emails ? JSON.parse(emails) : [];
+  var data = props.getProperty('offboardEntries');
+  return data ? JSON.parse(data) : [];
+}
+
+// Backward compat: also expose just emails
+function getOffboardEmails() {
+  return getOffboardEntries().map(function(e) { return e.email; });
+}
+
+function lookupUserPhoto(email) {
+  try {
+    var files = Drive.Files.list({
+      q: "'" + email + "' in readers or '" + email + "' in writers",
+      fields: "files(permissions(emailAddress,photoLink))",
+      pageSize: 1,
+      supportsAllDrives: true
+    });
+    if (files.files && files.files.length > 0 && files.files[0].permissions) {
+      var perms = files.files[0].permissions;
+      for (var i = 0; i < perms.length; i++) {
+        if (perms[i].emailAddress && perms[i].emailAddress.toLowerCase() === email.toLowerCase() && perms[i].photoLink) {
+          var url = perms[i].photoLink;
+          return url.startsWith('//') ? 'https:' + url : url;
+        }
+      }
+    }
+  } catch(e) {}
+  return "";
 }
 
 function addOffboardEmail(email) {
-  var emails = getOffboardEmails();
+  var entries = getOffboardEntries();
   email = email.trim().toLowerCase();
-  if (email && email.indexOf('@') !== -1 && emails.indexOf(email) === -1) {
-    emails.push(email);
-    PropertiesService.getUserProperties().setProperty('offboardEmails', JSON.stringify(emails));
+  if (!email || email.indexOf('@') === -1) return;
+  // Check dupe
+  for (var i = 0; i < entries.length; i++) {
+    if (entries[i].email === email) return;
   }
+  var photo = lookupUserPhoto(email);
+  entries.push({email: email, photo: photo});
+  PropertiesService.getUserProperties().setProperty('offboardEntries', JSON.stringify(entries));
 }
 
 function addOffboardEmails(newEmails) {
-  var emails = getOffboardEmails();
-  newEmails.forEach(function(email) {
-    email = email.trim().toLowerCase();
-    if (email && email.indexOf('@') !== -1 && emails.indexOf(email) === -1) {
-      emails.push(email);
+  var entries = getOffboardEntries();
+  var existingSet = {};
+  entries.forEach(function(e) { existingSet[e.email] = true; });
+
+  newEmails.forEach(function(em) {
+    em = em.trim().toLowerCase();
+    if (em && em.indexOf('@') !== -1 && !existingSet[em]) {
+      var photo = lookupUserPhoto(em);
+      entries.push({email: em, photo: photo});
+      existingSet[em] = true;
     }
   });
-  PropertiesService.getUserProperties().setProperty('offboardEmails', JSON.stringify(emails));
+  PropertiesService.getUserProperties().setProperty('offboardEntries', JSON.stringify(entries));
 }
 
 function removeOffboardEmail(email) {
-  var emails = getOffboardEmails();
-  emails = emails.filter(function(e) { return e !== email; });
-  PropertiesService.getUserProperties().setProperty('offboardEmails', JSON.stringify(emails));
+  var entries = getOffboardEntries();
+  entries = entries.filter(function(e) { return e.email !== email; });
+  PropertiesService.getUserProperties().setProperty('offboardEntries', JSON.stringify(entries));
 }
 
 function clearOffboardEmails() {
-  PropertiesService.getUserProperties().deleteProperty('offboardEmails');
+  PropertiesService.getUserProperties().deleteProperty('offboardEntries');
 }
