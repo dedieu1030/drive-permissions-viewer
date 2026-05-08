@@ -24,11 +24,11 @@ function createHomepageCard() {
   var offboardingSection = CardService.newCardSection().setHeader("Offboarding (Départ employé)");
   
   offboardingSection.addWidget(CardService.newTextParagraph()
-    .setText("Révocation en masse des accès pour un collaborateur sur tous vos documents."));
+    .setText("Révocation en masse des accès. Séparez plusieurs emails par des virgules."));
     
   var emailInput = CardService.newTextInput()
     .setFieldName("offboardEmail")
-    .setTitle("Adresse email de l'employé");
+    .setTitle("Emails (ex: a@test.com, b@test.com)");
     
   var searchAction = CardService.newAction()
     .setFunctionName("handleSearchUserAccess");
@@ -277,39 +277,55 @@ function handleRevokeAccess(e) {
 // --- OFFBOARDING / MASS REVOKE ---
 
 function handleSearchUserAccess(e) {
-  var email = e.formInput.offboardEmail;
-  if (!email || email.indexOf('@') === -1) {
+  var emailInput = e.formInput.offboardEmail;
+  if (!emailInput || emailInput.indexOf('@') === -1) {
     return CardService.newActionResponseBuilder()
-      .setNotification(CardService.newNotification().setText("Veuillez entrer un email valide."))
+      .setNotification(CardService.newNotification().setText("Veuillez entrer au moins un email valide."))
       .build();
   }
   
-  var files = searchUserAccess(email);
+  var files = searchUserAccess(emailInput);
   
   var card = CardService.newCardBuilder()
-    .setHeader(CardService.newCardHeader().setTitle("Offboarding").setSubtitle(email));
+    .setHeader(CardService.newCardHeader().setTitle("Offboarding").setSubtitle("Analyse des accès"));
     
   var section = CardService.newCardSection();
+  section.addWidget(CardService.newTextParagraph().setText("<b>Cibles :</b> " + emailInput));
   
   if (files.length === 0) {
-    section.addWidget(CardService.newTextParagraph().setText("Aucun accès direct trouvé pour cet utilisateur dans vos fichiers."));
+    section.addWidget(CardService.newTextParagraph().setText("Aucun accès direct trouvé pour ces utilisateurs."));
+    card.addSection(section);
   } else {
-    section.addWidget(CardService.newTextParagraph().setText("<b>" + files.length + " fichiers ou dossiers</b> trouvés avec un accès direct pour cet utilisateur."));
+    section.addWidget(CardService.newTextParagraph().setText("<b>" + files.length + " fichiers/dossiers exposés :</b>"));
     
-    // Bouton pour révoquer partout
+    // Afficher la liste des fichiers
+    // On limite l'affichage à 15 pour ne pas exploser l'UI
+    var displayCount = Math.min(files.length, 15);
+    for (var i = 0; i < displayCount; i++) {
+      section.addWidget(CardService.newDecoratedText()
+        .setText(files[i].name)
+        .setStartIcon(CardService.newIconImage().setIconUrl(ICONS.DRIVE)));
+    }
+    
+    if (files.length > 15) {
+      section.addWidget(CardService.newTextParagraph().setText("<i>... et " + (files.length - 15) + " autres éléments.</i>"));
+    }
+    card.addSection(section);
+    
+    var actionSection = CardService.newCardSection();
     var revokeAction = CardService.newAction()
       .setFunctionName("handleMassRevoke")
-      .setParameters({email: email});
+      .setParameters({email: emailInput});
       
-    section.addWidget(CardService.newButtonSet()
+    actionSection.addWidget(CardService.newButtonSet()
       .addButton(CardService.newTextButton()
         .setText("RÉVOQUER PARTOUT (" + files.length + ")")
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
         .setBackgroundColor("#d93025")
         .setOnClickAction(revokeAction)));
+        
+    card.addSection(actionSection);
   }
-  
-  card.addSection(section);
   
   return CardService.newActionResponseBuilder()
     .setNavigation(CardService.newNavigation().pushCard(card.build()))

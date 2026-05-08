@@ -132,10 +132,17 @@ function revokePermission(fileId, permId) {
 }
 
 /**
- * Recherche tous les fichiers/dossiers auxquels un utilisateur a un accès direct
+ * Recherche tous les fichiers/dossiers auxquels un ou plusieurs utilisateurs ont un accès direct
  */
-function searchUserAccess(email) {
-  var query = "'" + email + "' in readers or '" + email + "' in writers";
+function searchUserAccess(emailInput) {
+  var emails = emailInput.split(',').map(function(e) { return e.trim(); }).filter(function(e) { return e.length > 0; });
+  if (emails.length === 0) return [];
+  
+  var queryParts = emails.map(function(email) {
+    return "('" + email + "' in readers or '" + email + "' in writers)";
+  });
+  var query = queryParts.join(" or ");
+  
   var files = [];
   var pageToken = null;
   
@@ -163,19 +170,20 @@ function searchUserAccess(email) {
 }
 
 /**
- * Révoque l'accès d'un utilisateur sur une liste de fichiers
+ * Révoque l'accès de plusieurs utilisateurs sur une liste de fichiers
  */
-function massRevokeUser(email) {
-  var files = searchUserAccess(email);
+function massRevokeUser(emailInput) {
+  var emails = emailInput.split(',').map(function(e) { return e.trim().toLowerCase(); }).filter(function(e) { return e.length > 0; });
+  var files = searchUserAccess(emailInput);
   var revokedCount = 0;
   
   files.forEach(function(file) {
     try {
-      // On liste les permissions pour trouver l'ID exact lié à cet email
+      // On liste les permissions pour trouver l'ID exact lié à ces emails
       var permsResponse = Drive.Permissions.list(file.id, {fields: "permissions(id, emailAddress)", supportsAllDrives: true});
       if (permsResponse && permsResponse.permissions) {
         permsResponse.permissions.forEach(function(p) {
-          if (p.emailAddress && p.emailAddress.toLowerCase() === email.toLowerCase()) {
+          if (p.emailAddress && emails.indexOf(p.emailAddress.toLowerCase()) !== -1) {
             Drive.Permissions.remove(file.id, p.id, {supportsAllDrives: true});
             revokedCount++;
           }
