@@ -31,7 +31,7 @@ function createHomepageCard() {
   // --- RECHERCHE DE DOCUMENT (en haut) ---
   s.addWidget(CardService.newTextParagraph().setText("<b>Recherche de document</b>"));
   s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#9aa0a6'>Recherchez un fichier ou dossier pour voir qui y a accès</font>"
+    "<font color='#5e5e5e'>Recherchez un fichier ou dossier pour voir qui y a accès</font>"
   ));
 
   s.addWidget(CardService.newTextInput()
@@ -59,7 +59,7 @@ function createHomepageCard() {
     s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>" + entries.length + " collaborateur" + (entries.length > 1 ? "s" : "") + "</font>"
+      "<font color='#5e5e5e'>" + entries.length + " collaborateur" + (entries.length > 1 ? "s" : "") + "</font>"
     ));
 
     var showCount = Math.min(entries.length, 8);
@@ -75,7 +75,7 @@ function createHomepageCard() {
     }
     if (entries.length > 8) {
       s.addWidget(CardService.newTextParagraph().setText(
-        "<font color='#9aa0a6'>+" + (entries.length - 8) + " autres</font>"
+        "<font color='#5e5e5e'>+" + (entries.length - 8) + " autres</font>"
       ));
     }
 
@@ -85,7 +85,7 @@ function createHomepageCard() {
       .addButton(CardService.newTextButton()
         .setText("Lancer l'analyse")
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-        .setBackgroundColor("#1a73e8")
+        .setBackgroundColor("#0b57d0")
         .setOnClickAction(CardService.newAction().setFunctionName("handleSearchUserAccess")))
       .addButton(CardService.newTextButton()
         .setText("Vider")
@@ -95,7 +95,7 @@ function createHomepageCard() {
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
   s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#9aa0a6'>Importez depuis un Google Sheets (emails en colonne A)</font>"
+    "<font color='#5e5e5e'>Importez depuis un Google Sheets (emails en colonne A)</font>"
   ));
 
   s.addWidget(CardService.newTextInput()
@@ -118,7 +118,7 @@ function createMultipleItemsCard() {
   return CardService.newCardBuilder()
     .addSection(CardService.newCardSection()
       .addWidget(CardService.newTextParagraph().setText(
-        "<font color='#9aa0a6'>Veuillez sélectionner un seul élément.</font>")))
+        "<font color='#5e5e5e'>Veuillez sélectionner un seul élément.</font>")))
     .build();
 }
 
@@ -141,7 +141,7 @@ function buildPermissionCard(fileId, filterValue) {
 
   var s = CardService.newCardSection();
 
-  var scoreColor = details.score > 80 ? "#188038" : (details.score > 40 ? "#e37400" : "#d93025");
+  var scoreColor = details.score > 80 ? "#34a853" : (details.score > 40 ? "#fbbc04" : "#ea4335");
   var statusLabel = details.isPublic ? "Public" : (details.hasExternal ? "Externe" : "Privé");
 
   // Explication du niveau de risque
@@ -181,13 +181,13 @@ function buildPermissionCard(fileId, filterValue) {
 
   if (allPerms.length === 0) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>Aucun résultat.</font>"
+      "<font color='#5e5e5e'>Aucun résultat.</font>"
     ));
   } else {
     allPerms.forEach(function(p) {
       var emailText = p.email || p.domain || (p.type === 'anyone' ? 'Public' : p.displayName || p.type);
       var roleLabel = getRoleLabel(p.role);
-      var suffix = p.isExternal ? " <font color='#e37400'>ext.</font>" : "";
+      var suffix = p.isExternal ? " <font color='#fbbc04'>ext.</font>" : "";
       var bottomParts = [roleLabel];
       if (p.isInherited) bottomParts.push("hérité");
 
@@ -240,11 +240,11 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
 
   if (role === 'owner') {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>Le propriétaire ne peut pas être modifié ici.</font>"
+      "<font color='#5e5e5e'>Le propriétaire ne peut pas être modifié ici.</font>"
     ));
   } else if (isInherited) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>Accès hérité d'un dossier parent.</font>"
+      "<font color='#5e5e5e'>Accès hérité d'un dossier parent.</font>"
     ));
   } else {
     s.addWidget(CardService.newTextParagraph().setText("<b>Modifier le rôle</b>"));
@@ -263,7 +263,7 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
     s.addWidget(CardService.newTextButton()
       .setText("Révoquer l'accès")
       .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-      .setBackgroundColor("#d93025")
+      .setBackgroundColor("#ea4335")
       .setOnClickAction(CardService.newAction().setFunctionName("handleRevokeAccess").setParameters({fileId: fileId, permId: permId})));
   }
 
@@ -385,14 +385,14 @@ function buildResultsCard(entries, files, showCount) {
 
   // Affichage simple du nombre de collaborateurs (demande de simplification)
   s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#9aa0a6'>" + entries.length + " collaborateur" + (entries.length > 1 ? "s" : "") + " ciblé" + (entries.length > 1 ? "s" : "") + "</font>"
+    "<font color='#5e5e5e'>" + entries.length + " collaborateur" + (entries.length > 1 ? "s" : "") + " ciblé" + (entries.length > 1 ? "s" : "") + "</font>"
   ));
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
   if (files.length === 0) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>Aucun accès trouvé.</font>"
+      "<font color='#5e5e5e'>Aucun accès trouvé.</font>"
     ));
   } else {
     var exposedColumns = CardService.newColumns();
@@ -435,7 +435,7 @@ function buildResultsCard(entries, files, showCount) {
     s.addWidget(CardService.newTextButton()
       .setText("Révoquer tous les accès (" + files.length + ")")
       .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-      .setBackgroundColor("#d93025")
+      .setBackgroundColor("#ea4335")
       .setOnClickAction(CardService.newAction().setFunctionName("handleMassRevoke").setParameters({email: emailInput})));
   }
 
@@ -508,11 +508,11 @@ function buildFileSearchResultsCard(query, results) {
 
   if (results.length === 0) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>Aucun document trouvé.</font>"
+      "<font color='#5e5e5e'>Aucun document trouvé.</font>"
     ));
   } else {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>" + results.length + " résultat" + (results.length > 1 ? "s" : "") + "</font>"
+      "<font color='#5e5e5e'>" + results.length + " résultat" + (results.length > 1 ? "s" : "") + "</font>"
     ));
 
     results.forEach(function(file) {
@@ -566,7 +566,7 @@ function buildFolderContentsCard(folderName, folderId, contents) {
   if (contents.length === 0) {
     var emptySection = CardService.newCardSection();
     emptySection.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>Ce dossier est vide.</font>"
+      "<font color='#5e5e5e'>Ce dossier est vide.</font>"
     ));
     card.addSection(emptySection);
   } else {
@@ -602,7 +602,7 @@ function buildFolderContentsCard(folderName, folderId, contents) {
         });
       } else {
         fileSection.addWidget(CardService.newTextParagraph().setText(
-          "<font color='#9aa0a6'>Aucun accès partagé</font>"
+          "<font color='#5e5e5e'>Aucun accès partagé</font>"
         ));
       }
 
