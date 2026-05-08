@@ -363,21 +363,10 @@ function buildResultsCard(entries, files, showCount) {
     "<b>Résultats de l'analyse</b>"
   ));
 
-  // Retour au système vertical car le SDK ne supporte pas bien l'horizontal avec avatars
-  var maxItems = Math.min(entries.length, 2);
-  for (var i = 0; i < maxItems; i++) {
-    var entry = entries[i];
-    var iconUrl = entry.photo || ICONS.PERSON;
-    s.addWidget(CardService.newDecoratedText()
-      .setText(entry.email)
-      .setStartIcon(CardService.newIconImage().setIconUrl(iconUrl).setImageCropType(CardService.ImageCropType.CIRCLE)));
-  }
-
-  if (entries.length > 2) {
-    s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#9aa0a6'>+" + (entries.length - 2) + " autres collaborateurs</font>"
-    ));
-  }
+  // Affichage simple du nombre de collaborateurs (demande de simplification)
+  s.addWidget(CardService.newTextParagraph().setText(
+    "<font color='#9aa0a6'>" + entries.length + " collaborateur" + (entries.length > 1 ? "s" : "") + " ciblé" + (entries.length > 1 ? "s" : "") + "</font>"
+  ));
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
