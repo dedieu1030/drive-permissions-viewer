@@ -337,59 +337,96 @@ function handleImportSheet(e) {
 }
 
 function handleSearchUserAccess(e) {
-  var emails = getOffboardEmails();
-  if (emails.length === 0) return CardService.newActionResponseBuilder()
+  var entries = getOffboardEntries();
+  if (entries.length === 0) return CardService.newActionResponseBuilder()
     .setNotification(CardService.newNotification().setText("Ajoutez au moins un email.")).build();
 
+  var emails = entries.map(function(e) { return e.email; });
   var files = searchUserAccess(emails.join(','));
-  var card = CardService.newCardBuilder()
-    .setHeader(CardService.newCardHeader()
-      .setTitle("Résultats")
-      .setSubtitle(emails.length + " collaborateur" + (emails.length > 1 ? "s" : "")));
+  
+  // Stocker les fichiers trouvés
+  storeFoundFiles(files);
+  
+  var card = buildResultsCard(entries, files);
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().pushCard(card)).build();
+}
 
-  var s = CardService.newCardSection();
+function buildResultsCard(entries, files) {
+  var card = CardService.newCardBuilder()
+    .setHeader(CardService.newCardHeader().setTitle("Résultats de l'analyse"));
+
+  // Section 1 : Aperçu des collaborateurs ciblés
+  var emailSection = CardService.newCardSection();
+
+  var previewCount = Math.min(entries.length, 3);
+  for (var i = 0; i < previewCount; i++) {
+    var entry = entries[i];
+    var iconUrl = entry.photo || ICONS.PERSON;
+    emailSection.addWidget(CardService.newDecoratedText()
+      .setText(entry.email)
+      .setStartIcon(CardService.newIconImage().setIconUrl(iconUrl).setImageCropType(CardService.ImageCropType.CIRCLE)));
+  }
+  if (entries.length > 3) {
+    emailSection.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#9aa0a6'>+" + (entries.length - 3) + " autre" + ((entries.length - 3) > 1 ? "s" : "") + "</font>"
+    ));
+  }
+  card.addSection(emailSection);
+
+  // Section 2 : Fichiers exposés
+  var fileSection = CardService.newCardSection();
 
   if (files.length === 0) {
-    s.addWidget(CardService.newTextParagraph().setText(
+    fileSection.addWidget(CardService.newTextParagraph().setText(
       "<font color='#9aa0a6'>Aucun accès trouvé.</font>"
     ));
   } else {
-    s.addWidget(CardService.newTextParagraph().setText(
+    fileSection.addWidget(CardService.newTextParagraph().setText(
       "<b>" + files.length + " élément" + (files.length > 1 ? "s" : "") + " exposé" + (files.length > 1 ? "s" : "") + "</b>"
     ));
 
-    s.addWidget(CardService.newTextParagraph().setText("<br>"));
-
-    var n = Math.min(files.length, 12);
-    for (var i = 0; i < n; i++) {
-      s.addWidget(CardService.newDecoratedText()
-        .setText(files[i].name)
-        .setStartIcon(CardService.newIconImage().setIconUrl(ICONS.FOLDER)));
-    }
-    if (files.length > 12) {
-      s.addWidget(CardService.newTextParagraph().setText(
-        "<font color='#9aa0a6'>+" + (files.length - 12) + " autres</font>"
-      ));
+    // Afficher TOUS les fichiers avec icône + bouton supprimer
+    for (var j = 0; j < files.length; j++) {
+      var file = files[j];
+      var fileIcon = file.icon || ICONS.FOLDER;
+      fileSection.addWidget(CardService.newDecoratedText()
+        .setText(file.name)
+        .setStartIcon(CardService.newIconImage().setIconUrl(fileIcon))
+        .setButton(CardService.newImageButton()
+          .setIconUrl(ICONS.DELETE)
+          .setOnClickAction(CardService.newAction().setFunctionName("handleRemoveFile").setParameters({fileId: file.id}))));
     }
 
-    s.addWidget(CardService.newTextParagraph().setText("<br>"));
+    fileSection.addWidget(CardService.newTextParagraph().setText("<br>"));
 
-    s.addWidget(CardService.newTextButton()
-      .setText("Révoquer tous les accès")
+    var emailInput = entries.map(function(e) { return e.email; }).join(',');
+    fileSection.addWidget(CardService.newTextButton()
+      .setText("Révoquer tous les accès (" + files.length + ")")
       .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
       .setBackgroundColor("#d93025")
-      .setOnClickAction(CardService.newAction().setFunctionName("handleMassRevoke").setParameters({email: emails.join(',')})));
+      .setOnClickAction(CardService.newAction().setFunctionName("handleMassRevoke").setParameters({email: emailInput})));
   }
 
-  card.addSection(s);
+  card.addSection(fileSection);
+  return card.build();
+}
+
+function handleRemoveFile(e) {
+  var fileId = e.parameters.fileId;
+  var remainingFiles = removeFoundFile(fileId);
+  var entries = getOffboardEntries();
+  var card = buildResultsCard(entries, remainingFiles);
   return CardService.newActionResponseBuilder()
-    .setNavigation(CardService.newNavigation().pushCard(card.build())).build();
+    .setNavigation(CardService.newNavigation().updateCard(card)).build();
 }
 
 function handleMassRevoke(e) {
   var result = massRevokeUser(e.parameters.email);
   clearOffboardEmails();
+  clearFoundFiles();
   return CardService.newActionResponseBuilder()
     .setNotification(CardService.newNotification().setText(result.revokedCount + " accès révoqués."))
     .setNavigation(CardService.newNavigation().popCard().updateCard(createHomepageCard())).build();
 }
+

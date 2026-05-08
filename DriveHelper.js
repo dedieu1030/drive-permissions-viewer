@@ -156,17 +156,19 @@ function searchUserAccess(emailInput) {
     do {
       var response = Drive.Files.list({
         q: query,
-        fields: "nextPageToken, files(id, name)",
+        fields: "nextPageToken, files(id, name, iconLink)",
         supportsAllDrives: true,
         pageSize: 100,
         pageToken: pageToken
       });
       
       if (response.files) {
-        files = files.concat(response.files);
+        response.files.forEach(function(f) {
+          files.push({id: f.id, name: f.name, icon: f.iconLink || ""});
+        });
       }
       pageToken = response.nextPageToken;
-    } while (pageToken && files.length < 100); // Limite à 100 pour l'instant pour éviter les timeouts
+    } while (pageToken && files.length < 200);
     
     return files;
   } catch(e) {
@@ -279,4 +281,26 @@ function removeOffboardEmail(email) {
 
 function clearOffboardEmails() {
   PropertiesService.getUserProperties().deleteProperty('offboardEntries');
+}
+
+// --- FOUND FILES MANAGEMENT ---
+
+function storeFoundFiles(files) {
+  PropertiesService.getUserProperties().setProperty('foundFiles', JSON.stringify(files));
+}
+
+function getFoundFiles() {
+  var data = PropertiesService.getUserProperties().getProperty('foundFiles');
+  return data ? JSON.parse(data) : [];
+}
+
+function removeFoundFile(fileId) {
+  var files = getFoundFiles();
+  files = files.filter(function(f) { return f.id !== fileId; });
+  PropertiesService.getUserProperties().setProperty('foundFiles', JSON.stringify(files));
+  return files;
+}
+
+function clearFoundFiles() {
+  PropertiesService.getUserProperties().deleteProperty('foundFiles');
 }
