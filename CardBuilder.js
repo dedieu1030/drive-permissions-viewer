@@ -14,30 +14,25 @@ function createHomepageCard() {
   var card = CardService.newCardBuilder();
   var emails = getOffboardEmails();
 
-  // --- Unique section : tout est ici, pas de barres inutiles ---
   var s = CardService.newCardSection();
 
-  // Titre + description aérée
   s.addWidget(CardService.newTextParagraph().setText(
-    "<b><font color='#202124'>Audit de sécurité Drive</font></b>"
+    "<b>Audit de sécurité Drive</b>"
   ));
   s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#5f6368'>Sélectionnez un document pour analyser ses permissions, ou lancez un offboarding ci-dessous.</font>"
+    "<font color='#9aa0a6'>Sélectionnez un document pour analyser ses permissions, ou lancez un offboarding ci-dessous.</font>"
   ));
 
-  // Spacer
-  s.addWidget(CardService.newDivider());
+  // Espace
+  s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
-  // Offboarding : titre discret
   s.addWidget(CardService.newTextParagraph().setText(
-    "<b><font color='#202124'>Offboarding</font></b>"
+    "<b>Offboarding</b>"
   ));
 
-  // Input email
   s.addWidget(CardService.newTextInput()
     .setFieldName("newEmail")
-    .setTitle("Email du collaborateur")
-    .setHint("ex : jean.dupont@entreprise.com"));
+    .setTitle("Email du collaborateur"));
 
   s.addWidget(CardService.newTextButton()
     .setText("Ajouter")
@@ -45,11 +40,10 @@ function createHomepageCard() {
 
   // Liste des emails ajoutés
   if (emails.length > 0) {
-    // Spacer
-    s.addWidget(CardService.newTextParagraph().setText(" "));
+    s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#5f6368'>" + emails.length + " collaborateur" + (emails.length > 1 ? "s" : "") + " ciblé" + (emails.length > 1 ? "s" : "") + "</font>"
+      "<font color='#9aa0a6'>" + emails.length + " collaborateur" + (emails.length > 1 ? "s" : "") + "</font>"
     ));
 
     var showCount = Math.min(emails.length, 8);
@@ -63,12 +57,11 @@ function createHomepageCard() {
     }
     if (emails.length > 8) {
       s.addWidget(CardService.newTextParagraph().setText(
-        "<font color='#80868b'>+" + (emails.length - 8) + " autres</font>"
+        "<font color='#bdc1c6'>+" + (emails.length - 8) + " autres</font>"
       ));
     }
 
-    // Spacer
-    s.addWidget(CardService.newTextParagraph().setText(" "));
+    s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     s.addWidget(CardService.newButtonSet()
       .addButton(CardService.newTextButton()
@@ -77,16 +70,14 @@ function createHomepageCard() {
         .setBackgroundColor("#1a73e8")
         .setOnClickAction(CardService.newAction().setFunctionName("handleSearchUserAccess")))
       .addButton(CardService.newTextButton()
-        .setText("Vider la liste")
+        .setText("Vider")
         .setOnClickAction(CardService.newAction().setFunctionName("handleClearEmails"))));
   }
 
-  // Spacer
-  s.addWidget(CardService.newDivider());
+  s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
-  // Import Google Sheets — discret, secondaire
   s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#80868b'>Ou importez depuis un Google Sheets (emails en colonne A)</font>"
+    "<font color='#bdc1c6'>Importez depuis un Google Sheets (emails en colonne A)</font>"
   ));
 
   s.addWidget(CardService.newTextInput()
@@ -109,7 +100,7 @@ function createMultipleItemsCard() {
   return CardService.newCardBuilder()
     .addSection(CardService.newCardSection()
       .addWidget(CardService.newTextParagraph().setText(
-        "<font color='#5f6368'>Veuillez sélectionner un seul élément.</font>")))
+        "<font color='#9aa0a6'>Veuillez sélectionner un seul élément.</font>")))
     .build();
 }
 
@@ -124,33 +115,29 @@ function buildPermissionCard(fileId, filterValue) {
   filterValue = filterValue || "ALL";
   var card = CardService.newCardBuilder();
 
-  // Header : Nom du fichier
   card.setHeader(CardService.newCardHeader()
     .setTitle(details.name)
     .setSubtitle(details.owner));
 
-  // --- Section unique : Score + chemin ---
-  var s1 = CardService.newCardSection();
+  // Tout dans une seule section
+  var s = CardService.newCardSection();
 
   var scoreColor = details.score > 80 ? "#188038" : (details.score > 40 ? "#e37400" : "#d93025");
   var statusLabel = details.isPublic ? "Public" : (details.hasExternal ? "Externe" : "Privé");
 
-  s1.addWidget(CardService.newTextParagraph().setText(
+  s.addWidget(CardService.newTextParagraph().setText(
     "<font color='" + scoreColor + "'><b>" + details.score + "/100</b></font>" +
-    "  <font color='#5f6368'>•  " + statusLabel + "</font>"
+    "  <font color='#9aa0a6'>•  " + statusLabel + "</font>"
   ));
 
   var breadcrumbs = details.path.join("  ›  ") || "Mon Drive";
-  s1.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#80868b'>" + breadcrumbs + "</font>"
+  s.addWidget(CardService.newTextParagraph().setText(
+    "<font color='#bdc1c6'>" + breadcrumbs + "</font>"
   ));
 
-  card.addSection(s1);
+  s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
-  // --- Section : Filtre + Membres ---
-  var s2 = CardService.newCardSection();
-
-  s2.addWidget(CardService.newSelectionInput()
+  s.addWidget(CardService.newSelectionInput()
     .setType(CardService.SelectionInputType.DROPDOWN)
     .setFieldName("roleFilter")
     .addItem("Tous les rôles", "ALL", filterValue === "ALL")
@@ -165,22 +152,21 @@ function buildPermissionCard(fileId, filterValue) {
   }
 
   if (allPerms.length === 0) {
-    s2.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#80868b'>Aucun résultat pour ce filtre.</font>"
+    s.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#bdc1c6'>Aucun résultat.</font>"
     ));
   } else {
     allPerms.forEach(function(p) {
       var emailText = p.email || p.domain || (p.type === 'anyone' ? 'Public' : p.displayName || p.type);
       var roleLabel = getRoleLabel(p.role);
       var suffix = p.isExternal ? " <font color='#e37400'>ext.</font>" : "";
-      var origin = p.isInherited ? "hérité" : "";
       var bottomParts = [roleLabel];
-      if (origin) bottomParts.push(origin);
+      if (p.isInherited) bottomParts.push("hérité");
 
       var avatarUrl = p.photoLink ? (p.photoLink.startsWith('//') ? 'https:' + p.photoLink : p.photoLink) : "";
 
       var w = CardService.newDecoratedText()
-        .setText("<b>" + emailText + "</b>" + suffix)
+        .setText(emailText + suffix)
         .setBottomLabel(bottomParts.join("  •  "));
 
       if (avatarUrl) {
@@ -204,11 +190,11 @@ function buildPermissionCard(fileId, filterValue) {
           photoLink: avatarUrl || ""
         }));
 
-      s2.addWidget(w);
+      s.addWidget(w);
     });
   }
 
-  card.addSection(s2);
+  card.addSection(s);
   return card.build();
 }
 
@@ -224,39 +210,27 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
 
   var s = CardService.newCardSection();
 
-  if (photoLink) {
-    var memberWidget = CardService.newDecoratedText()
-      .setText("<b>" + email + "</b>")
-      .setBottomLabel(getRoleLabel(role))
-      .setStartIcon(CardService.newIconImage()
-        .setIconUrl(photoLink)
-        .setImageCropType(CardService.ImageCropType.CIRCLE));
-    s.addWidget(memberWidget);
-  }
-
-  // Spacer
-  s.addWidget(CardService.newTextParagraph().setText(" "));
-
   if (role === 'owner') {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#80868b'>Le propriétaire ne peut pas être modifié ici.</font>"
+      "<font color='#bdc1c6'>Le propriétaire ne peut pas être modifié ici.</font>"
     ));
   } else if (isInherited) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#80868b'>Accès hérité d'un dossier parent. Modifiez le dossier parent pour ajuster.</font>"
+      "<font color='#bdc1c6'>Accès hérité d'un dossier parent.</font>"
     ));
   } else {
+    s.addWidget(CardService.newTextParagraph().setText("<b>Modifier le rôle</b>"));
+
     s.addWidget(CardService.newSelectionInput()
       .setType(CardService.SelectionInputType.DROPDOWN)
-      .setTitle("Modifier le rôle")
+      .setTitle("Rôle")
       .setFieldName("newRole")
       .addItem("Éditeur", "writer", role === "writer")
       .addItem("Commentateur", "commenter", role === "commenter")
       .addItem("Lecteur", "reader", role === "reader")
       .setOnChangeAction(CardService.newAction().setFunctionName("handleChangeRole").setParameters({fileId: fileId, permId: permId})));
 
-    // Spacer
-    s.addWidget(CardService.newTextParagraph().setText(" "));
+    s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     s.addWidget(CardService.newTextButton()
       .setText("Révoquer l'accès")
@@ -270,138 +244,96 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
 }
 
 // ============================================================
-//  HANDLERS — NAVIGATION
+//  HANDLERS
 // ============================================================
 
 function handleFilterChange(e) {
-  var fileId = e.parameters.fileId;
-  var selectedFilter = e.formInput.roleFilter;
   return CardService.newActionResponseBuilder()
-    .setNavigation(CardService.newNavigation().updateCard(buildPermissionCard(fileId, selectedFilter)))
+    .setNavigation(CardService.newNavigation().updateCard(buildPermissionCard(e.parameters.fileId, e.formInput.roleFilter)))
     .build();
 }
 
 function getRoleLabel(role) {
-  var m = {'owner': 'Propriétaire', 'writer': 'Éditeur', 'commenter': 'Commentateur', 'reader': 'Lecteur'};
-  return m[role] || role;
-}
-
-function handleExportClick(e) {
-  return CardService.newActionResponseBuilder()
-    .setNotification(CardService.newNotification().setText("Audit exporté."))
-    .build();
+  return {'owner': 'Propriétaire', 'writer': 'Éditeur', 'commenter': 'Commentateur', 'reader': 'Lecteur'}[role] || role;
 }
 
 function handleMemberClick(e) {
-  var card = buildMemberDetailsCard(
-    e.parameters.fileId,
-    e.parameters.permId,
-    e.parameters.email,
-    e.parameters.role,
-    e.parameters.isInherited === "true",
-    e.parameters.photoLink
-  );
   return CardService.newActionResponseBuilder()
-    .setNavigation(CardService.newNavigation().pushCard(card))
+    .setNavigation(CardService.newNavigation().pushCard(buildMemberDetailsCard(
+      e.parameters.fileId, e.parameters.permId, e.parameters.email,
+      e.parameters.role, e.parameters.isInherited === "true", e.parameters.photoLink)))
     .build();
 }
 
 function handleChangeRole(e) {
-  var fileId = e.parameters.fileId;
-  var permId = e.parameters.permId;
-  var newRole = e.formInput.newRole;
-  var success = updatePermissionRole(fileId, permId, newRole);
-  var msg = success ? "Rôle mis à jour." : "Erreur lors de la mise à jour.";
+  var success = updatePermissionRole(e.parameters.fileId, e.parameters.permId, e.formInput.newRole);
   var resp = CardService.newActionResponseBuilder()
-    .setNotification(CardService.newNotification().setText(msg));
-  if (success) {
-    resp.setNavigation(CardService.newNavigation().popCard().updateCard(buildPermissionCard(fileId)));
-  }
+    .setNotification(CardService.newNotification().setText(success ? "Rôle mis à jour." : "Erreur."));
+  if (success) resp.setNavigation(CardService.newNavigation().popCard().updateCard(buildPermissionCard(e.parameters.fileId)));
   return resp.build();
 }
 
 function handleRevokeAccess(e) {
-  var fileId = e.parameters.fileId;
-  var permId = e.parameters.permId;
-  var success = revokePermission(fileId, permId);
-  var msg = success ? "Accès révoqué." : "Erreur lors de la révocation.";
+  var success = revokePermission(e.parameters.fileId, e.parameters.permId);
   var resp = CardService.newActionResponseBuilder()
-    .setNotification(CardService.newNotification().setText(msg));
-  if (success) {
-    resp.setNavigation(CardService.newNavigation().popCard().updateCard(buildPermissionCard(fileId)));
-  }
+    .setNotification(CardService.newNotification().setText(success ? "Accès révoqué." : "Erreur."));
+  if (success) resp.setNavigation(CardService.newNavigation().popCard().updateCard(buildPermissionCard(e.parameters.fileId)));
   return resp.build();
 }
 
 // ============================================================
-//  HANDLERS — OFFBOARDING
+//  OFFBOARDING HANDLERS
 // ============================================================
 
 function handleAddEmail(e) {
-  var email = e.formInput.newEmail;
-  if (email) addOffboardEmail(email);
+  if (e.formInput.newEmail) addOffboardEmail(e.formInput.newEmail);
   return CardService.newActionResponseBuilder()
-    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard()))
-    .build();
+    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard())).build();
 }
 
 function handleRemoveEmail(e) {
   removeOffboardEmail(e.parameters.email);
   return CardService.newActionResponseBuilder()
-    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard()))
-    .build();
+    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard())).build();
 }
 
 function handleClearEmails(e) {
   clearOffboardEmails();
   return CardService.newActionResponseBuilder()
-    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard()))
-    .build();
+    .setNavigation(CardService.newNavigation().updateCard(createHomepageCard())).build();
 }
 
 function handleImportSheet(e) {
   var url = e.formInput.sheetUrl;
-  if (!url) {
-    return CardService.newActionResponseBuilder()
-      .setNotification(CardService.newNotification().setText("Collez un lien Google Sheets."))
-      .build();
-  }
+  if (!url) return CardService.newActionResponseBuilder()
+    .setNotification(CardService.newNotification().setText("Collez un lien.")).build();
   try {
-    var ss = SpreadsheetApp.openByUrl(url);
-    var data = ss.getActiveSheet().getRange("A1:A1000").getValues();
-    var newEmails = [];
+    var data = SpreadsheetApp.openByUrl(url).getActiveSheet().getRange("A1:A1000").getValues();
+    var found = [];
     for (var i = 0; i < data.length; i++) {
-      var val = String(data[i][0]).trim();
-      if (val && val.indexOf('@') !== -1) newEmails.push(val);
+      var v = String(data[i][0]).trim();
+      if (v && v.indexOf('@') !== -1) found.push(v);
     }
-    if (newEmails.length > 0) {
-      addOffboardEmails(newEmails);
+    if (found.length > 0) {
+      addOffboardEmails(found);
       return CardService.newActionResponseBuilder()
-        .setNotification(CardService.newNotification().setText(newEmails.length + " emails importés."))
-        .setNavigation(CardService.newNavigation().updateCard(createHomepageCard()))
-        .build();
+        .setNotification(CardService.newNotification().setText(found.length + " emails importés."))
+        .setNavigation(CardService.newNavigation().updateCard(createHomepageCard())).build();
     }
     return CardService.newActionResponseBuilder()
-      .setNotification(CardService.newNotification().setText("Aucun email trouvé en colonne A."))
-      .build();
+      .setNotification(CardService.newNotification().setText("Aucun email en colonne A.")).build();
   } catch (err) {
     return CardService.newActionResponseBuilder()
-      .setNotification(CardService.newNotification().setText("Lien invalide ou accès refusé."))
-      .build();
+      .setNotification(CardService.newNotification().setText("Lien invalide ou accès refusé.")).build();
   }
 }
 
 function handleSearchUserAccess(e) {
   var emails = getOffboardEmails();
-  if (emails.length === 0) {
-    return CardService.newActionResponseBuilder()
-      .setNotification(CardService.newNotification().setText("Ajoutez au moins un email."))
-      .build();
-  }
+  if (emails.length === 0) return CardService.newActionResponseBuilder()
+    .setNotification(CardService.newNotification().setText("Ajoutez au moins un email.")).build();
 
-  var emailInput = emails.join(',');
-  var files = searchUserAccess(emailInput);
-
+  var files = searchUserAccess(emails.join(','));
   var card = CardService.newCardBuilder()
     .setHeader(CardService.newCardHeader()
       .setTitle("Résultats")
@@ -411,42 +343,37 @@ function handleSearchUserAccess(e) {
 
   if (files.length === 0) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#80868b'>Aucun accès direct trouvé.</font>"
+      "<font color='#bdc1c6'>Aucun accès trouvé.</font>"
     ));
   } else {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<b><font color='#202124'>" + files.length + " élément" + (files.length > 1 ? "s" : "") + " exposé" + (files.length > 1 ? "s" : "") + "</font></b>"
+      "<b>" + files.length + " élément" + (files.length > 1 ? "s" : "") + " exposé" + (files.length > 1 ? "s" : "") + "</b>"
     ));
 
-    // Spacer
-    s.addWidget(CardService.newTextParagraph().setText(" "));
-
-    var displayCount = Math.min(files.length, 12);
-    for (var i = 0; i < displayCount; i++) {
+    var n = Math.min(files.length, 12);
+    for (var i = 0; i < n; i++) {
       s.addWidget(CardService.newDecoratedText()
         .setText(files[i].name)
         .setStartIcon(CardService.newIconImage().setIconUrl(ICONS.FOLDER)));
     }
     if (files.length > 12) {
       s.addWidget(CardService.newTextParagraph().setText(
-        "<font color='#80868b'>+" + (files.length - 12) + " autres</font>"
+        "<font color='#bdc1c6'>+" + (files.length - 12) + " autres</font>"
       ));
     }
 
-    // Spacer
-    s.addWidget(CardService.newTextParagraph().setText(" "));
+    s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     s.addWidget(CardService.newTextButton()
       .setText("Révoquer tous les accès")
       .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
       .setBackgroundColor("#d93025")
-      .setOnClickAction(CardService.newAction().setFunctionName("handleMassRevoke").setParameters({email: emailInput})));
+      .setOnClickAction(CardService.newAction().setFunctionName("handleMassRevoke").setParameters({email: emails.join(',')})));
   }
 
   card.addSection(s);
   return CardService.newActionResponseBuilder()
-    .setNavigation(CardService.newNavigation().pushCard(card.build()))
-    .build();
+    .setNavigation(CardService.newNavigation().pushCard(card.build())).build();
 }
 
 function handleMassRevoke(e) {
@@ -454,6 +381,5 @@ function handleMassRevoke(e) {
   clearOffboardEmails();
   return CardService.newActionResponseBuilder()
     .setNotification(CardService.newNotification().setText(result.revokedCount + " accès révoqués."))
-    .setNavigation(CardService.newNavigation().popCard().updateCard(createHomepageCard()))
-    .build();
+    .setNavigation(CardService.newNavigation().popCard().updateCard(createHomepageCard())).build();
 }
