@@ -104,3 +104,29 @@ function processPermissions(permissionsList, resultObj, currentDomain, isInherit
     }
   });
 }
+
+/**
+ * Met à jour le rôle d'une permission existante
+ */
+function updatePermissionRole(fileId, permId, newRole) {
+  try {
+    Drive.Permissions.update({role: newRole}, fileId, permId, {supportsAllDrives: true});
+    return true;
+  } catch(e) {
+    console.error("Erreur updatePermissionRole:", e);
+    return false;
+  }
+}
+
+/**
+ * Supprime (révoque) une permission
+ */
+function revokePermission(fileId, permId) {
+  try {
+    Drive.Permissions.remove(fileId, permId, {supportsAllDrives: true});
+    return true;
+  } catch(e) {
+    console.error("Erreur revokePermission:", e);
+    return false;
+  }
+}
