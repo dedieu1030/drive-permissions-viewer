@@ -20,15 +20,12 @@ function createHomepageCard() {
     "<b>Audit de sécurité Drive</b>"
   ));
   s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#9aa0a6'>Sélectionnez un document pour analyser ses permissions, ou lancez un offboarding ci-dessous.</font>"
+    "Sélectionnez un document pour analyser ses permissions, ou lancez un offboarding ci-dessous."
   ));
 
-  // Espace
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
-  s.addWidget(CardService.newTextParagraph().setText(
-    "<b>Offboarding</b>"
-  ));
+  s.addWidget(CardService.newTextParagraph().setText("<b>Offboarding</b>"));
 
   s.addWidget(CardService.newTextInput()
     .setFieldName("newEmail")
@@ -38,7 +35,6 @@ function createHomepageCard() {
     .setText("Ajouter")
     .setOnClickAction(CardService.newAction().setFunctionName("handleAddEmail")));
 
-  // Liste des emails ajoutés
   if (emails.length > 0) {
     s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
@@ -57,7 +53,7 @@ function createHomepageCard() {
     }
     if (emails.length > 8) {
       s.addWidget(CardService.newTextParagraph().setText(
-        "<font color='#bdc1c6'>+" + (emails.length - 8) + " autres</font>"
+        "<font color='#9aa0a6'>+" + (emails.length - 8) + " autres</font>"
       ));
     }
 
@@ -77,7 +73,7 @@ function createHomepageCard() {
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
   s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#bdc1c6'>Importez depuis un Google Sheets (emails en colonne A)</font>"
+    "<font color='#9aa0a6'>Importez depuis un Google Sheets (emails en colonne A)</font>"
   ));
 
   s.addWidget(CardService.newTextInput()
@@ -119,7 +115,6 @@ function buildPermissionCard(fileId, filterValue) {
     .setTitle(details.name)
     .setSubtitle(details.owner));
 
-  // Tout dans une seule section
   var s = CardService.newCardSection();
 
   var scoreColor = details.score > 80 ? "#188038" : (details.score > 40 ? "#e37400" : "#d93025");
@@ -132,7 +127,7 @@ function buildPermissionCard(fileId, filterValue) {
 
   var breadcrumbs = details.path.join("  ›  ") || "Mon Drive";
   s.addWidget(CardService.newTextParagraph().setText(
-    "<font color='#bdc1c6'>" + breadcrumbs + "</font>"
+    "<font color='#9aa0a6'>" + breadcrumbs + "</font>"
   ));
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
@@ -153,7 +148,7 @@ function buildPermissionCard(fileId, filterValue) {
 
   if (allPerms.length === 0) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#bdc1c6'>Aucun résultat.</font>"
+      "<font color='#9aa0a6'>Aucun résultat.</font>"
     ));
   } else {
     allPerms.forEach(function(p) {
@@ -212,11 +207,11 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
 
   if (role === 'owner') {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#bdc1c6'>Le propriétaire ne peut pas être modifié ici.</font>"
+      "<font color='#9aa0a6'>Le propriétaire ne peut pas être modifié ici.</font>"
     ));
   } else if (isInherited) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#bdc1c6'>Accès hérité d'un dossier parent.</font>"
+      "<font color='#9aa0a6'>Accès hérité d'un dossier parent.</font>"
     ));
   } else {
     s.addWidget(CardService.newTextParagraph().setText("<b>Modifier le rôle</b>"));
@@ -343,12 +338,14 @@ function handleSearchUserAccess(e) {
 
   if (files.length === 0) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#bdc1c6'>Aucun accès trouvé.</font>"
+      "<font color='#9aa0a6'>Aucun accès trouvé.</font>"
     ));
   } else {
     s.addWidget(CardService.newTextParagraph().setText(
       "<b>" + files.length + " élément" + (files.length > 1 ? "s" : "") + " exposé" + (files.length > 1 ? "s" : "") + "</b>"
     ));
+
+    s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     var n = Math.min(files.length, 12);
     for (var i = 0; i < n; i++) {
@@ -358,7 +355,7 @@ function handleSearchUserAccess(e) {
     }
     if (files.length > 12) {
       s.addWidget(CardService.newTextParagraph().setText(
-        "<font color='#bdc1c6'>+" + (files.length - 12) + " autres</font>"
+        "<font color='#9aa0a6'>+" + (files.length - 12) + " autres</font>"
       ));
     }
 
