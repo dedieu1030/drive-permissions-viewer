@@ -1,10 +1,10 @@
 /**
- * Helper to fetch file details and permissions using Drive API
+ * Helper pour récupérer les détails, la hiérarchie et calculer un score de sécurité
  */
 function getDriveItemDetails(fileId) {
   try {
     var file = Drive.Files.get(fileId, {
-      fields: "id, name, mimeType, owners, shared, permissions, parents",
+      fields: "id, name, mimeType, owners, shared, permissions, parents, webViewLink",
       supportsAllDrives: true
     });
     
@@ -14,38 +14,57 @@ function getDriveItemDetails(fileId) {
     var result = {
       name: file.name,
       id: file.id,
+      mimeType: file.mimeType,
       isFolder: file.mimeType === "application/vnd.google-apps.folder",
-      owner: file.owners && file.owners.length > 0 ? file.owners[0].emailAddress : "Unknown",
+      owner: file.owners && file.owners.length > 0 ? file.owners[0].emailAddress : "Inconnu",
       isPublic: false,
       hasExternal: false,
       directPermissions: [],
-      inheritedPermissions: []
+      inheritedPermissions: [],
+      path: [],
+      score: 100 // Score de base
     };
     
-    // Process direct permissions
+    // 1. Calcul du chemin (Hiérarchie)
+    var currentFile = file;
+    var pathNames = [];
+    try {
+      while (currentFile.parents && currentFile.parents.length > 0) {
+        var parentId = currentFile.parents[0];
+        var parentFile = Drive.Files.get(parentId, { fields: "name, parents", supportsAllDrives: true });
+        pathNames.unshift(parentFile.name);
+        currentFile = parentFile;
+      }
+    } catch (e) {
+      pathNames.unshift("..."); // Si on n'a pas accès à un parent
+    }
+    result.path = pathNames;
+
+    // 2. Traitement des permissions et calcul du score
     if (file.permissions) {
       processPermissions(file.permissions, result, currentDomain, false);
     }
     
-    // Attempt to detect inherited permissions by checking the immediate parent
+    // Détection d'héritage (parent immédiat)
     if (file.parents && file.parents.length > 0) {
       try {
-        var parentId = file.parents[0];
-        var parentFile = Drive.Files.get(parentId, { 
-          fields: "permissions",
-          supportsAllDrives: true 
-        });
-        if (parentFile.permissions) {
-          processPermissions(parentFile.permissions, result, currentDomain, true);
+        var immediateParent = Drive.Files.get(file.parents[0], { fields: "permissions", supportsAllDrives: true });
+        if (immediateParent.permissions) {
+          processPermissions(immediateParent.permissions, result, currentDomain, true);
         }
       } catch (err) {
-        console.log("Could not fetch parent permissions", err);
+        console.log("Parent inaccessible");
       }
     }
+
+    // Ajustement du score final
+    if (result.isPublic) result.score -= 50;
+    if (result.hasExternal) result.score -= 20;
+    if (result.score < 0) result.score = 0;
     
     return result;
   } catch (e) {
-    console.error("Error fetching Drive item details:", e);
+    console.error(e);
     return null;
   }
 }
@@ -58,6 +77,7 @@ function processPermissions(permissionsList, resultObj, currentDomain, isInherit
       email: perm.emailAddress,
       domain: perm.domain,
       displayName: perm.displayName,
+      photoLink: perm.photoLink,
       isInherited: isInherited,
       id: perm.id
     };
@@ -74,19 +94,13 @@ function processPermissions(permissionsList, resultObj, currentDomain, isInherit
       }
     }
     
-    // Avoid adding duplicates (e.g. if the API returns the inherited perm in both lists)
-    var isDuplicate = resultObj.directPermissions.some(function(existing) {
-      return existing.id === p.id;
-    }) || resultObj.inheritedPermissions.some(function(existing) {
-      return existing.id === p.id;
-    });
+    // Unicité
+    var isDuplicate = resultObj.directPermissions.some(function(e) { return e.id === p.id; }) || 
+                      resultObj.inheritedPermissions.some(function(e) { return e.id === p.id; });
 
     if (!isDuplicate) {
-      if (isInherited) {
-        resultObj.inheritedPermissions.push(p);
-      } else {
-        resultObj.directPermissions.push(p);
-      }
+      if (isInherited) resultObj.inheritedPermissions.push(p);
+      else resultObj.directPermissions.push(p);
     }
   });
 }
