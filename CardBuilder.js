@@ -20,7 +20,10 @@ function createHomepageCard() {
     "<b>Audit de sécurité Drive</b>"
   ));
   s.addWidget(CardService.newTextParagraph().setText(
-    "Recherchez un document ou lancez un offboarding ci-dessous."
+    "<b>Auditer vos fichiers depuis Google Drive™️</b><br>" +
+    "1. Sélectionnez un fichier ou dossier dans votre Drive<br>" +
+    "2. Consultez les accès et le score de sécurité<br>" +
+    "3. Révoquez les accès suspects en un clic"
   ));
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
