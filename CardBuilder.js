@@ -40,6 +40,8 @@ function createHomepageCard() {
 
   s.addWidget(CardService.newTextButton()
     .setText("Rechercher")
+    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+    .setBackgroundColor("#0b57d0")
     .setOnClickAction(CardService.newAction().setFunctionName("handleDocSearch")));
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
@@ -53,6 +55,8 @@ function createHomepageCard() {
 
   s.addWidget(CardService.newTextButton()
     .setText("Ajouter")
+    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+    .setBackgroundColor("#0b57d0")
     .setOnClickAction(CardService.newAction().setFunctionName("handleAddEmail")));
 
   if (entries.length > 0) {
@@ -104,6 +108,8 @@ function createHomepageCard() {
 
   s.addWidget(CardService.newTextButton()
     .setText("Importer")
+    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+    .setBackgroundColor("#0b57d0")
     .setOnClickAction(CardService.newAction().setFunctionName("handleImportSheet")));
 
   card.addSection(s);
@@ -403,7 +409,7 @@ function buildResultsCard(entries, files, showCount) {
     exposedColumns.addColumn(CardService.newColumn()
       .setHorizontalAlignment(CardService.HorizontalAlignment.END)
       .setVerticalAlignment(CardService.VerticalAlignment.CENTER)
-      .addWidget(CardService.newButtonSet()
+      .addWidget(CardService.newButtonList()
         .addButton(CardService.newTextButton()
           .setText("Sélectionner")
           .setOnClickAction(CardService.newAction().setFunctionName("handleSelectMode")))));
