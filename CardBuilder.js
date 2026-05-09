@@ -238,28 +238,22 @@ function buildPermissionCard(fileId, filterValue) {
 //  MEMBER DETAILS CARD
 // ============================================================
 
-function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoLink, selectedRole, ownerEmail, canShare) {
+function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoLink, canShare) {
   var card = CardService.newCardBuilder();
   var s = CardService.newCardSection();
-  
-  selectedRole = selectedRole || role;
-  var currentUserEmail = Session.getActiveUser().getEmail();
-  var isOwner = (currentUserEmail === ownerEmail);
 
-  // Avatar, Email et Rôle groupés dans le corps (pour éviter la ligne de séparation du header)
+  // Avatar, Email et Rôle groupés dans le corps
   var avatarUrl = photoLink || ICONS.PERSON;
-  var permissionStatus = canShare ? "<font color='#34a853'>Autorisé à modifier</font>" : "<font color='#ea4335'>Modification restreinte</font>";
-  
   s.addWidget(CardService.newDecoratedText()
     .setText("<b>" + email + "</b>")
-    .setBottomLabel(getRoleLabel(role) + "  •  " + permissionStatus)
+    .setBottomLabel(getRoleLabel(role))
     .setStartIcon(CardService.newIconImage()
       .setIconUrl(avatarUrl)
       .setImageCropType(CardService.ImageCropType.CIRCLE)));
 
   if (role === 'owner') {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#5e5e5e'>Le propriétaire ne peut pas être modifié ici.</font>"
+      "<font color='#5e5e5e'>Le propriétaire ne peut pas être supprimé ici.</font>"
     ));
   } else if (isInherited) {
     s.addWidget(CardService.newTextParagraph().setText(
@@ -267,42 +261,9 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
     ));
   } else if (!canShare) {
     s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#ea4335'>Les restrictions de partage de ce fichier vous empêchent de modifier les accès.</font>"
+      "<font color='#ea4335'>Les restrictions de partage de ce fichier vous empêchent de supprimer des accès.</font>"
     ));
   } else {
-    s.addWidget(CardService.newTextParagraph().setText("<br><b>Modifier le rôle</b>"));
-
-    s.addWidget(CardService.newSelectionInput()
-      .setType(CardService.SelectionInputType.DROPDOWN)
-      .setTitle("Rôle")
-      .setFieldName("newRole")
-      .addItem("Éditeur", "writer", selectedRole === "writer")
-      .addItem("Commentateur", "commenter", selectedRole === "commenter")
-      .addItem("Lecteur", "reader", selectedRole === "reader")
-      .setOnChangeAction(CardService.newAction()
-        .setFunctionName("handleRoleDropdownChange")
-        .setParameters({
-          fileId: fileId,
-          permId: permId,
-          email: email,
-          role: role,
-          isInherited: isInherited ? "true" : "false",
-          photoLink: photoLink || "",
-          ownerEmail: ownerEmail,
-          canShare: canShare ? "true" : "false"
-        })));
-
-    // Le bouton ne s'affiche que si le rôle sélectionné est différent du rôle actuel
-    if (selectedRole !== role) {
-      s.addWidget(CardService.newTextButton()
-        .setText("Enregistrer")
-        .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-        .setBackgroundColor("#c2e7ff")
-        .setOnClickAction(CardService.newAction()
-          .setFunctionName("handleChangeRole")
-          .setParameters({fileId: fileId, permId: permId})));
-    }
-
     s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
     s.addWidget(CardService.newTextButton()
@@ -335,21 +296,12 @@ function handleMemberClick(e) {
     .setNavigation(CardService.newNavigation().pushCard(buildMemberDetailsCard(
       e.parameters.fileId, e.parameters.permId, e.parameters.email,
       e.parameters.role, e.parameters.isInherited === "true", e.parameters.photoLink,
-      null, e.parameters.ownerEmail, e.parameters.canShare === "true")))
-    .build();
-}
-
-function handleRoleDropdownChange(e) {
-  var selectedRole = e.formInput.newRole;
-  return CardService.newActionResponseBuilder()
-    .setNavigation(CardService.newNavigation().updateCard(buildMemberDetailsCard(
-      e.parameters.fileId, e.parameters.permId, e.parameters.email,
-      e.parameters.role, e.parameters.isInherited === "true", e.parameters.photoLink,
-      selectedRole, e.parameters.ownerEmail, e.parameters.canShare === "true")))
+      e.parameters.canShare === "true")))
     .build();
 }
 
 function handleChangeRole(e) {
+  // Cette fonction n'est plus utilisée dans l'interface simplifiée, mais conservée pour compatibilité ou usage futur
   var success = updatePermissionRole(e.parameters.fileId, e.parameters.permId, e.formInput.newRole);
   var resp = CardService.newActionResponseBuilder()
     .setNotification(CardService.newNotification().setText(success ? "Rôle mis à jour." : "Erreur."));
