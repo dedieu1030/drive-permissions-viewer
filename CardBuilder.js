@@ -222,7 +222,8 @@ function buildPermissionCard(fileId, filterValue) {
           role: p.role,
           isInherited: p.isInherited ? "true" : "false",
           photoLink: avatarUrl || "",
-          ownerEmail: details.owner
+          ownerEmail: details.owner,
+          canShare: details.canShare ? "true" : "false"
         }));
 
       s.addWidget(w);
@@ -237,7 +238,7 @@ function buildPermissionCard(fileId, filterValue) {
 //  MEMBER DETAILS CARD
 // ============================================================
 
-function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoLink, selectedRole, ownerEmail) {
+function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoLink, selectedRole, ownerEmail, canShare) {
   var card = CardService.newCardBuilder();
   var s = CardService.newCardSection();
   
@@ -262,6 +263,10 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
     s.addWidget(CardService.newTextParagraph().setText(
       "<font color='#5e5e5e'>Accès hérité d'un dossier parent.</font>"
     ));
+  } else if (!canShare) {
+    s.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#ea4335'>Les restrictions de partage de ce fichier vous empêchent de modifier les accès.</font>"
+    ));
   } else {
     s.addWidget(CardService.newTextParagraph().setText("<br><b>Modifier le rôle</b>"));
 
@@ -281,7 +286,8 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
           role: role,
           isInherited: isInherited ? "true" : "false",
           photoLink: photoLink || "",
-          ownerEmail: ownerEmail
+          ownerEmail: ownerEmail,
+          canShare: canShare ? "true" : "false"
         })));
 
     // Le bouton ne s'affiche que si le rôle sélectionné est différent du rôle actuel
@@ -327,7 +333,7 @@ function handleMemberClick(e) {
     .setNavigation(CardService.newNavigation().pushCard(buildMemberDetailsCard(
       e.parameters.fileId, e.parameters.permId, e.parameters.email,
       e.parameters.role, e.parameters.isInherited === "true", e.parameters.photoLink,
-      null, e.parameters.ownerEmail)))
+      null, e.parameters.ownerEmail, e.parameters.canShare === "true")))
     .build();
 }
 
@@ -337,7 +343,7 @@ function handleRoleDropdownChange(e) {
     .setNavigation(CardService.newNavigation().updateCard(buildMemberDetailsCard(
       e.parameters.fileId, e.parameters.permId, e.parameters.email,
       e.parameters.role, e.parameters.isInherited === "true", e.parameters.photoLink,
-      selectedRole, e.parameters.ownerEmail)))
+      selectedRole, e.parameters.ownerEmail, e.parameters.canShare === "true")))
     .build();
 }
 

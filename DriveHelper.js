@@ -4,7 +4,7 @@
 function getDriveItemDetails(fileId) {
   try {
     var file = Drive.Files.get(fileId, {
-      fields: "id, name, mimeType, owners, shared, permissions, parents, webViewLink, iconLink",
+      fields: "id, name, mimeType, owners, shared, permissions, parents, webViewLink, iconLink, capabilities",
       supportsAllDrives: true
     });
     
@@ -18,6 +18,7 @@ function getDriveItemDetails(fileId) {
       isFolder: file.mimeType === "application/vnd.google-apps.folder",
       owner: file.owners && file.owners.length > 0 ? file.owners[0].emailAddress : "Inconnu",
       iconUrl: file.iconLink || "",
+      canShare: file.capabilities ? file.capabilities.canShare : false,
       isPublic: false,
       hasExternal: false,
       directPermissions: [],
