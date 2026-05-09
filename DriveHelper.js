@@ -11,6 +11,13 @@ function getDriveItemDetails(fileId) {
     var currentUserEmail = Session.getActiveUser().getEmail();
     var currentDomain = currentUserEmail.split('@')[1] || "";
     
+    // Détection robuste des droits de modification
+    var canModify = false;
+    if (file.capabilities) {
+      // Sur My Drive, canShare est la clé. Sur Shared Drive, c'est aussi canShare pour les permissions.
+      canModify = file.capabilities.canShare || false;
+    }
+
     var result = {
       name: file.name,
       id: file.id,
@@ -18,7 +25,7 @@ function getDriveItemDetails(fileId) {
       isFolder: file.mimeType === "application/vnd.google-apps.folder",
       owner: file.owners && file.owners.length > 0 ? file.owners[0].emailAddress : "Inconnu",
       iconUrl: file.iconLink || "",
-      canShare: file.capabilities ? file.capabilities.canShare : false,
+      canShare: canModify,
       isPublic: false,
       hasExternal: false,
       directPermissions: [],

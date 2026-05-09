@@ -248,9 +248,11 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
 
   // Avatar, Email et Rôle groupés dans le corps (pour éviter la ligne de séparation du header)
   var avatarUrl = photoLink || ICONS.PERSON;
+  var permissionStatus = canShare ? "<font color='#34a853'>Autorisé à modifier</font>" : "<font color='#ea4335'>Modification restreinte</font>";
+  
   s.addWidget(CardService.newDecoratedText()
     .setText("<b>" + email + "</b>")
-    .setBottomLabel(getRoleLabel(role))
+    .setBottomLabel(getRoleLabel(role) + "  •  " + permissionStatus)
     .setStartIcon(CardService.newIconImage()
       .setIconUrl(avatarUrl)
       .setImageCropType(CardService.ImageCropType.CIRCLE)));
