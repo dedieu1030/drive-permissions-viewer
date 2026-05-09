@@ -262,10 +262,6 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
     s.addWidget(CardService.newTextParagraph().setText(
       "<font color='#5e5e5e'>Accès hérité d'un dossier parent.</font>"
     ));
-  } else if (!isOwner) {
-    s.addWidget(CardService.newTextParagraph().setText(
-      "<font color='#ea4335'>Seul le propriétaire peut modifier les accès via cet outil.</font>"
-    ));
   } else {
     s.addWidget(CardService.newTextParagraph().setText("<br><b>Modifier le rôle</b>"));
 
