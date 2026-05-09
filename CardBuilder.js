@@ -221,7 +221,8 @@ function buildPermissionCard(fileId, filterValue) {
           email: emailText,
           role: p.role,
           isInherited: p.isInherited ? "true" : "false",
-          photoLink: avatarUrl || ""
+          photoLink: avatarUrl || "",
+          ownerEmail: details.owner
         }));
 
       s.addWidget(w);
@@ -236,9 +237,13 @@ function buildPermissionCard(fileId, filterValue) {
 //  MEMBER DETAILS CARD
 // ============================================================
 
-function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoLink) {
+function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoLink, selectedRole, ownerEmail) {
   var card = CardService.newCardBuilder();
   var s = CardService.newCardSection();
+  
+  selectedRole = selectedRole || role;
+  var currentUserEmail = Session.getActiveUser().getEmail();
+  var isOwner = (currentUserEmail === ownerEmail);
 
   // Avatar, Email et Rôle groupés dans le corps (pour éviter la ligne de séparation du header)
   var avatarUrl = photoLink || ICONS.PERSON;
@@ -257,6 +262,10 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
     s.addWidget(CardService.newTextParagraph().setText(
       "<font color='#5e5e5e'>Accès hérité d'un dossier parent.</font>"
     ));
+  } else if (!isOwner) {
+    s.addWidget(CardService.newTextParagraph().setText(
+      "<font color='#ea4335'>Seul le propriétaire peut modifier les accès via cet outil.</font>"
+    ));
   } else {
     s.addWidget(CardService.newTextParagraph().setText("<br><b>Modifier le rôle</b>"));
 
@@ -264,15 +273,31 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
       .setType(CardService.SelectionInputType.DROPDOWN)
       .setTitle("Rôle")
       .setFieldName("newRole")
-      .addItem("Éditeur", "writer", role === "writer")
-      .addItem("Commentateur", "commenter", role === "commenter")
-      .addItem("Lecteur", "reader", role === "reader"));
+      .addItem("Éditeur", "writer", selectedRole === "writer")
+      .addItem("Commentateur", "commenter", selectedRole === "commenter")
+      .addItem("Lecteur", "reader", selectedRole === "reader")
+      .setOnChangeAction(CardService.newAction()
+        .setFunctionName("handleRoleDropdownChange")
+        .setParameters({
+          fileId: fileId,
+          permId: permId,
+          email: email,
+          role: role,
+          isInherited: isInherited ? "true" : "false",
+          photoLink: photoLink || "",
+          ownerEmail: ownerEmail
+        })));
 
-    s.addWidget(CardService.newTextButton()
-      .setText("Enregistrer")
-      .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-      .setBackgroundColor("#c2e7ff")
-      .setOnClickAction(CardService.newAction().setFunctionName("handleChangeRole").setParameters({fileId: fileId, permId: permId})));
+    // Le bouton ne s'affiche que si le rôle sélectionné est différent du rôle actuel
+    if (selectedRole !== role) {
+      s.addWidget(CardService.newTextButton()
+        .setText("Enregistrer")
+        .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+        .setBackgroundColor("#c2e7ff")
+        .setOnClickAction(CardService.newAction()
+          .setFunctionName("handleChangeRole")
+          .setParameters({fileId: fileId, permId: permId})));
+    }
 
     s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
@@ -305,7 +330,18 @@ function handleMemberClick(e) {
   return CardService.newActionResponseBuilder()
     .setNavigation(CardService.newNavigation().pushCard(buildMemberDetailsCard(
       e.parameters.fileId, e.parameters.permId, e.parameters.email,
-      e.parameters.role, e.parameters.isInherited === "true", e.parameters.photoLink)))
+      e.parameters.role, e.parameters.isInherited === "true", e.parameters.photoLink,
+      null, e.parameters.ownerEmail)))
+    .build();
+}
+
+function handleRoleDropdownChange(e) {
+  var selectedRole = e.formInput.newRole;
+  return CardService.newActionResponseBuilder()
+    .setNavigation(CardService.newNavigation().updateCard(buildMemberDetailsCard(
+      e.parameters.fileId, e.parameters.permId, e.parameters.email,
+      e.parameters.role, e.parameters.isInherited === "true", e.parameters.photoLink,
+      selectedRole, e.parameters.ownerEmail)))
     .build();
 }
 
