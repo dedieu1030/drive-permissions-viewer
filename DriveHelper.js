@@ -11,13 +11,6 @@ function getDriveItemDetails(fileId) {
     var currentUserEmail = Session.getActiveUser().getEmail();
     var currentDomain = currentUserEmail.split('@')[1] || "";
     
-    // Détection robuste des droits de modification
-    var canModify = false;
-    if (file.capabilities) {
-      // Sur My Drive, canShare est la clé. Sur Shared Drive, c'est aussi canShare pour les permissions.
-      canModify = file.capabilities.canShare || false;
-    }
-
     var result = {
       name: file.name,
       id: file.id,
@@ -25,7 +18,7 @@ function getDriveItemDetails(fileId) {
       isFolder: file.mimeType === "application/vnd.google-apps.folder",
       owner: file.owners && file.owners.length > 0 ? file.owners[0].emailAddress : "Inconnu",
       iconUrl: file.iconLink || "",
-      canShare: canModify,
+      canShare: file.capabilities ? file.capabilities.canShare : false,
       isPublic: false,
       hasExternal: false,
       directPermissions: [],
@@ -54,15 +47,23 @@ function getDriveItemDetails(fileId) {
       processPermissions(file.permissions, result, currentDomain, false);
     }
     
-    // Détection d'héritage (parent immédiat)
-    if (file.parents && file.parents.length > 0) {
+    // 3. Détection d'héritage récursive (pour marquer correctement les permissions non-supprimables)
+    var parentQueue = (file.parents || []).slice();
+    var visitedParents = {};
+    while (parentQueue.length > 0) {
+      var pId = parentQueue.shift();
+      if (visitedParents[pId]) continue;
+      visitedParents[pId] = true;
       try {
-        var immediateParent = Drive.Files.get(file.parents[0], { fields: "permissions", supportsAllDrives: true });
-        if (immediateParent.permissions) {
-          processPermissions(immediateParent.permissions, result, currentDomain, true);
+        var pFile = Drive.Files.get(pId, { fields: "permissions, parents", supportsAllDrives: true });
+        if (pFile.permissions) {
+          processPermissions(pFile.permissions, result, currentDomain, true);
+        }
+        if (pFile.parents) {
+          parentQueue = parentQueue.concat(pFile.parents);
         }
       } catch (err) {
-        console.log("Parent inaccessible");
+        // Parent inaccessible (souvent la racine du Drive ou dossier hors domaine)
       }
     }
 
