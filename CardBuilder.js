@@ -83,7 +83,17 @@ function createHomepageCard() {
       ));
     }
 
+    s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
+    s.addWidget(CardService.newButtonSet()
+      .addButton(CardService.newTextButton()
+        .setText("Lancer l'analyse")
+        .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+        .setBackgroundColor("#c2e7ff")
+        .setOnClickAction(CardService.newAction().setFunctionName("handleSearchUserAccess")))
+      .addButton(CardService.newTextButton()
+        .setText("Vider")
+        .setOnClickAction(CardService.newAction().setFunctionName("handleClearEmails"))));
   }
 
   s.addWidget(CardService.newTextParagraph().setText("<br>"));
@@ -391,7 +401,20 @@ function buildResultsCard(entries, files, showCount) {
       "<font color='#5e5e5e'>Aucun accès trouvé.</font>"
     ));
   } else {
-    s.addWidget(CardService.newTextParagraph().setText("<b>" + files.length + " éléments exposés</b>"));
+    var exposedColumns = CardService.newColumns();
+    exposedColumns.addColumn(CardService.newColumn()
+      .setVerticalAlignment(CardService.VerticalAlignment.CENTER)
+      .addWidget(CardService.newTextParagraph().setText("<b>" + files.length + " éléments exposés</b>")));
+    
+    exposedColumns.addColumn(CardService.newColumn()
+      .setHorizontalAlignment(CardService.HorizontalAlignment.END)
+      .setVerticalAlignment(CardService.VerticalAlignment.CENTER)
+      .addWidget(CardService.newButtonList()
+        .addButton(CardService.newTextButton()
+          .setText("Sélectionner")
+          .setOnClickAction(CardService.newAction().setFunctionName("handleSelectMode")))));
+    
+    s.addWidget(exposedColumns);
 
     var displayCount = Math.min(files.length, showCount);
     for (var j = 0; j < displayCount; j++) {
