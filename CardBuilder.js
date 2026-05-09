@@ -310,10 +310,11 @@ function handleChangeRole(e) {
 }
 
 function handleRevokeAccess(e) {
-  var success = revokePermission(e.parameters.fileId, e.parameters.permId);
+  var result = revokePermission(e.parameters.fileId, e.parameters.permId);
+  var msg = result.success ? "Accès révoqué." : "Erreur : " + result.error;
   var resp = CardService.newActionResponseBuilder()
-    .setNotification(CardService.newNotification().setText(success ? "Accès révoqué." : "Erreur."));
-  if (success) resp.setNavigation(CardService.newNavigation().popCard().updateCard(buildPermissionCard(e.parameters.fileId)));
+    .setNotification(CardService.newNotification().setText(msg));
+  if (result.success) resp.setNavigation(CardService.newNavigation().popCard().updateCard(buildPermissionCard(e.parameters.fileId)));
   return resp.build();
 }
 

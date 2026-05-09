@@ -4,7 +4,7 @@
 function getDriveItemDetails(fileId) {
   try {
     var file = Drive.Files.get(fileId, {
-      fields: "id, name, mimeType, owners, shared, permissions, parents, webViewLink, iconLink, capabilities",
+      fields: "id, name, mimeType, owners, shared, permissions, parents, webViewLink, iconLink, capabilities, driveId",
       supportsAllDrives: true
     });
     
@@ -19,6 +19,7 @@ function getDriveItemDetails(fileId) {
       owner: file.owners && file.owners.length > 0 ? file.owners[0].emailAddress : "Inconnu",
       iconUrl: file.iconLink || "",
       canShare: file.capabilities ? file.capabilities.canShare : false,
+      canManageMembers: file.capabilities ? file.capabilities.canManageMembers : false,
       isPublic: false,
       hasExternal: false,
       directPermissions: [],
@@ -115,6 +116,8 @@ function processPermissions(permissionsList, resultObj, currentDomain, isInherit
   });
 }
 
+
+
 /**
  * Met à jour le rôle d'une permission existante
  */
@@ -134,10 +137,13 @@ function updatePermissionRole(fileId, permId, newRole) {
 function revokePermission(fileId, permId) {
   try {
     Drive.Permissions.remove(fileId, permId, {supportsAllDrives: true});
-    return true;
+    return {success: true};
   } catch(e) {
-    console.error("Erreur revokePermission:", e);
-    return false;
+    var errorMsg = e.toString();
+    // Nettoyage du message technique Google
+    if (errorMsg.indexOf("insufficientFilePermissions") !== -1) errorMsg = "Permissions insuffisantes.";
+    else if (errorMsg.indexOf("cannotModifyInherited") !== -1) errorMsg = "Impossible : accès hérité.";
+    return {success: false, error: errorMsg};
   }
 }
 
