@@ -266,8 +266,13 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
       .setFieldName("newRole")
       .addItem("Éditeur", "writer", role === "writer")
       .addItem("Commentateur", "commenter", role === "commenter")
-      .addItem("Lecteur", "reader", role === "reader")
-      .setOnChangeAction(CardService.newAction().setFunctionName("handleChangeRole").setParameters({fileId: fileId, permId: permId})));
+      .addItem("Lecteur", "reader", role === "reader"));
+
+    s.addWidget(CardService.newTextButton()
+      .setText("Enregistrer")
+      .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+      .setBackgroundColor("#c2e7ff")
+      .setOnClickAction(CardService.newAction().setFunctionName("handleChangeRole").setParameters({fileId: fileId, permId: permId})));
 
     s.addWidget(CardService.newTextParagraph().setText("<br>"));
 
