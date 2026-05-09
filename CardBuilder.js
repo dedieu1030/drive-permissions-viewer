@@ -237,12 +237,17 @@ function buildPermissionCard(fileId, filterValue) {
 // ============================================================
 
 function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoLink) {
-  var card = CardService.newCardBuilder()
-    .setHeader(CardService.newCardHeader()
-      .setTitle(email)
-      .setSubtitle(getRoleLabel(role)));
-
+  var card = CardService.newCardBuilder();
   var s = CardService.newCardSection();
+
+  // Avatar, Email et Rôle groupés dans le corps (pour éviter la ligne de séparation du header)
+  var avatarUrl = photoLink || ICONS.PERSON;
+  s.addWidget(CardService.newDecoratedText()
+    .setText("<b>" + email + "</b>")
+    .setBottomLabel(getRoleLabel(role))
+    .setStartIcon(CardService.newIconImage()
+      .setIconUrl(avatarUrl)
+      .setImageCropType(CardService.ImageCropType.CIRCLE)));
 
   if (role === 'owner') {
     s.addWidget(CardService.newTextParagraph().setText(
@@ -253,7 +258,7 @@ function buildMemberDetailsCard(fileId, permId, email, role, isInherited, photoL
       "<font color='#5e5e5e'>Accès hérité d'un dossier parent.</font>"
     ));
   } else {
-    s.addWidget(CardService.newTextParagraph().setText("<b>Modifier le rôle</b>"));
+    s.addWidget(CardService.newTextParagraph().setText("<br><b>Modifier le rôle</b>"));
 
     s.addWidget(CardService.newSelectionInput()
       .setType(CardService.SelectionInputType.DROPDOWN)
